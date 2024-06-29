@@ -1,0 +1,1184 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+A sample cluster configuration , elasticsearch.yml
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+cluster.name: payment
+node.name: es-data-payment-1-1b
+discovery.zen.minimum_master_nodes: 2
+discovery.seed_hosts: ["10.80.1.2:9300","10.80.1.3:9300","10.80.1.4:9300"] 
+cluster.initial_master_nodes: ["10.80.1.2:9300","10.80.1.3:9300","10.80.1.4:9300"] 
+cluster.routing.allocation.awareness.force.zone.values: zone1,zone2 
+cluster.routing.allocation.awareness.attributes: zone
+node.attr.zone: zone1
+node.roles: [ data, remote_cluster_client, ingest ] 
+path.data: /mnt1/data/es
+path.logs: /var/logs/elasticsearch
+network.host: ["10.80.1.5", "_local_"] 
+network.publish_host: 10.80.1.5 
+transport.tcp.port: 9300
+http.port: 9200
+bootstrap.memory_lock: true
+http.cors.enabled: false
+xpack.ml.enabled: false
+
+Seed_hosts is a configuration setting used in the context of cluster formation and discovery. It specifies the initial set of nodes that an Elasticsearch node should contact to join a cluster
+initial_master_nodes is critical for the initial master election during the first cluster bootstrapping.
+Shard allocation awareness in Elasticsearch is a feature that helps ensure that your data is distributed across different physical locations to improve fault tolerance and availability. It allows you to control how shards are allocated based on certain attributes, such as data center, zone, or node types, ensuring that replicas are not placed on the same physical hardware or location.
+
+Primary Shard: The original copy of the data.
+Replica Shard: A copy of the primary shard used for redundancy and failover.
+
+Attributes are key-value pairs that you assign to nodes in your Elasticsearch cluster. Common attributes include:
+zone
+data_center
+These attributes are used to influence shard allocation decisions.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is the difference between elasticsearch match Vs match_al
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+match query: Used for full-text search and returns documents that match the analyzed search terms in the specified field.
+GET /books/_search
+{
+  "query": {
+    "match": {
+      "title": "Elasticsearch"
+    }
+  }
+}
+
+match_all query: Used to retrieve all documents in the index without any filtering or matching.
+GET /books/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Explain Query DSL in ElasticSearch with an example
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Query DSL (Domain Specific Language) in Elasticsearch is a powerful and flexible way to define queries to retrieve and manipulate data from an Elasticsearch index. It is JSON-based, Key Components of Query DSL
+Match Queries: Used for full-text search.
+GET /books/_search
+{
+  "query": {
+    "match": {
+      "title": "Elasticsearch"
+    }
+  }
+}
+
+Term Queries: Used for exact matches.
+GET /books/_search
+{
+  "query": {
+    "term": {
+      "author": "John Doe"
+    }
+  }
+}
+
+Range Queries: Used to find documents within a range.
+GET /books/_search
+{
+  "query": {
+    "range": {
+      "publish_date": {
+        "gte": "2020-01-01",
+        "lte": "2021-12-31"
+      }
+    }
+  }
+}
+
+Boolean Queries: Combine multiple queries with boolean logic (must, should, must_not).
+GET /books/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "title": "Elasticsearch" } }
+      ],
+      "should": [
+        { "term": { "author": "John Doe" } },
+        { "term": { "author": "Jane Smith" } }
+      ],
+      "must_not": [
+        { "range": { "price": { "gt": 40 } } }
+      ]
+    }
+  }
+}
+
+Filters: Used to narrow down search results without affecting relevance scores.
+GET /books/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "title": "Elasticsearch" } },
+        { "term": { "author": "John Doe" } }
+      ],
+      "filter": [
+        { "range": { "price": { "lt": 50 } } }
+      ]
+    }
+  }
+}
+
+Aggregations: Used to group and summarize data.
+GET /books/_search
+{
+  "size": 0,
+  "aggs": {
+    "tags_agg": {
+      "terms": {
+        "field": "tags"
+      }
+    }
+  }
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is doc_values in Elasticsearch 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+doc_values store field values in a columnar format, meaning that all values for a particular field across all documents are stored together
+Document 1: {"username": "alice", "age": 30}
+Document 2: {"username": "bob", "age": 25}
+Document 3: {"username": "carol", "age": 35}
+Elasticsearch serializes and writes these columns to disk in a format optimized for quick read access. Here's a conceptual representation:
+
+username column stored in doc_values:
+[ "alice", "bob", "carol" ]
+Age
+[ 30, 25, 35 ]
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is ElasticSearch Mapping, please explain with an example
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Elasticsearch mapping defines how documents and their fields are stored and indexed in Elasticsearch, Its a Blueprint of an Index
+Similar to a database schema, which defines the structure of tables, columns, and their data types, Elasticsearch mapping defines the structure of documents and fields within an index
+
+CREATE TABLE books (
+    id INT PRIMARY KEY,
+    title VARCHAR(255),
+    author VARCHAR(255),
+    publish_date DATE
+);
+
+In Elasticsearch, the equivalent mapping would look like this:
+
+PUT /books
+{
+  "mappings": {
+    "properties": {
+      "id": { "type": "integer" },
+      "title": { "type": "text" },
+      "author": { "type": "keyword" },
+      "publish_date": { "type": "date" }
+    }
+  }
+}
+Elasticsearch can automatically detect and add new fields to the index. This is called dynamic mapping.
+Defining a mapping explicitly allows more control over field types and indexing behavior, leading to better performance and accuracy.
+Fields in Elasticsearch can have different data types such as text, keyword, date, long, double, boolean, etc.
+Analyzers are used for text fields to process the text into tokens during indexing and querying. They determine how the text is tokenized and filtered.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is filters in elasticsearch, please exaplin with an example
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+In Elasticsearch, filters are used to narrow down search results based on specific criteria without affecting the relevance score of the documents. 
+Term Filter: Filters documents that contain an exact term in a specified field.
+Range Filter: Filters documents that have field values within a specified range.
+Bool Filter: Allows you to combine multiple filters using boolean logic(AND,OR,NOT).
+Exists Filter: Filters documents that have a specified field present.
+
+Filters are faster than queries because they do not need to compute relevance scores.
+Filters are automatically cached, improving performance for repeated queries with the same filters.
+Filters limit the search space, making the query execution more efficient.
+
+GET /my_index/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "title": "Elasticsearch" } }
+      ],
+      "filter": [
+        { "term": { "author": "John Doe" } },
+        { "range": { "price": { "lt": 30 } } }
+      ]
+    }
+  }
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is the Purpose of the "Refresh" Operation And Transaction log in Elasticsearch?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+The "refresh" operation in Elasticsearch is crucial for ensuring that newly indexed or updated documents are available for search. This operation essentially makes the changes visible in the search index by creating a new segment for these changes.
+Whenever a document is indexed, updated, or deleted, the operation is first written to the transaction log.
+Alongside writing to the transaction log, the operation is also written to an in-memory buffer for quick access.
+Periodically, Elasticsearch creates commits or do refresh , points where the in-memory buffer is flushed to disk, creating new segment files. These operations ensure that data is searchable.
+After each write operation, Elasticsearch synchronizes the transaction log to disk, ensuring that the operation is safely stored.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Please explain aggregation in ElasticSearch with an example
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Aggregations in Elasticsearch allow you to perform advanced data analysis and summarization of your search results. They are similar to SQL's 'GROUP BY' clause but more powerful.
+Metric Aggregations: Calculate metrics, such as count, average, sum, min, max, etc.
+
+Bucket Aggregations: Group documents into buckets. Each bucket corresponds to a criterion.
+
+Terms Aggregation: Group by unique values of a field.
+Range Aggregation: Group by numerical or date ranges.
+Histogram Aggregation: Group by intervals.
+Date Histogram Aggregation: Group by date intervals.
+
+
+GET /sales/_search
+{
+  "size": 0,
+  "aggs": {
+    "categories": {
+      "terms": {
+        "field": "category.keyword"
+      },
+      "aggs": {
+        "total_sales": {
+          "sum": {
+            "field": "amount"
+          }
+        },
+        "average_sales": {
+          "avg": {
+            "field": "amount"
+          }
+        }
+      }
+    }
+  }
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Why elasticsearch is not used for transaction database
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Elasticsearch is not typically used as a transactional database due to several key limitations and design choices that make it unsuitable for workloads requiring strict transactional guarantees. Here are the primary reasons:
+
+Lack of ACID Compliance
+Elasticsearch does not support multi-document transactions, meaning you cannot ensure that a series of changes to different documents are committed atomically
+While Elasticsearch is optimized for search and retrieval, indexing can be resource-intensive and may introduce latency. In a transactional system where high throughput of writes and low latency is critical, this can become a bottleneck.
+
+Atomicity: Ensures that all operations within the bulk request are executed together.
+Consistency : The system must remain in a consistent state before and after the transaction.
+Isolation: Concurrent transactions must not interfere with each other.
+Durability: Once a transaction is committed, it must not be lost, even in in system crash.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What are the steps internally done when updating a document
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Client Request: The client sends an update request to an Elasticsearch node.
+Routing: The node determines the primary shard responsible for the document.
+Fetch Document: The primary shard fetches the current document version.
+Apply Update: The update is applied, and the document version is incremented.
+Write to Translog: The update is written to the translog for durability.
+Update Inverted Index: The in-memory index structures are updated.
+Replication: The update is sent to replica shards, which follow similar steps.
+Acknowledgement: Once replicas confirm the update, the primary shard responds to the client.
+Refresh (if requested): The index is refreshed to make the document searchable immediately.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+An inverted index is a fundamental data structure used by search engines. It allows for quick retrieval of documents containing specific terms.
+
+When a document is indexed in Elasticsearch:
+Analyzers Convert raw text into tokens, Analyzers composed of character filters, tokenizers, and token filters.
+Tokenizers: Break text into tokens using different methods (e.g., standard, whitespace, keyword).
+Character Filters: Preprocess the text before tokenization (e.g., HTML stripping).
+Token Filters: Modify tokens after tokenization (e.g., lowercase conversion, ASCII folding).
+
+POST _analyze 
+{
+  "text" : "How are you, This is Sukanta From Kolkata , Today Is ver very hot"
+  , "char_filter": []
+  , "tokenizer": "standard"
+  , "filter": ["uppercase"]
+}
+
+The structure of an inverted index consists of:
+Dictionary: A list of all unique terms in the dataset.
+Postings List: For each term in the dictionary, there is a postings list that records the documents in which the term appears and, optionally, the positions of the term within each document.
+
+Document 1: "Elasticsearch is a powerful search engine."
+Document 2: "A search engine is essential for full-text search."
+After analysis and tokenization, the terms might be:
+
+Document 1: ["elasticsearch", "is", "a", "powerful", "search", "engine"]
+Document 2: ["a", "search", "engine", "is", "essential", "for", "full-text", "search"]
+The inverted index would look like this:
+
+"elasticsearch" -> [1]
+"is" -> [1, 2]
+"a" -> [1, 2]
+"powerful" -> [1]
+"search" -> [1, 2]
+"engine" -> [1, 2]
+"essential" -> [2]
+"for" -> [2]
+"full-text" -> [2]
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+In Elasticsearch, a bootstrap check is a set of pre-flight checks that are performed when a node starts up.
+
+1. Memory Lock: Ensures that the JVM is configured to lock memory to prevent swapping, bootstrap.memory_lock: true
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Memory Pages: Modern operating systems manage memory in fixed-size blocks called pages (typically 4 KB in size). When a JVM heap is allocated, it is divided into multiple pages.
+Full Heap Scan: During a major GC, the garbage collector scans and processes the entire heap to identify and collect all the objects that are no longer in use.
+Touching Every Page: When we say the GC "touches every page of the heap," it means that the GC process reads from and possibly writes to each page of memory that has been allocated to the heap.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+2. File Descriptors: Elasticsearch uses a mmapfs directory by default to store its indices. The default operating system limits on mmap counts is likely to be too low, which may result in out of memory exceptions, increase ulimit
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Memory-mapped files allow applications to map files directly into the address space of the process. This means that parts of the file are loaded into memory as needed and can be accessed directly by the application
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+3. virtual memory : Ensures the system is configured with sufficient virtual memory.vm.max_map_count should be at least 262144.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+4. Heap Size: Ensures that the JVM heap size is appropriately configured.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+please explain in details how to improve elasticsearch search queries with an example
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+1. Use Filters Instead of Queries for Non-Scoring Criteria
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "description": "fast laptop" } },
+        { "range": { "price": { "gte": 500, "lte": 1500 } } },
+        { "term": { "availability": "in_stock" } }
+      ],
+      "filter": [
+        { "term": { "category": "electronics" } }
+      ]
+    }
+  },
+  "sort": [
+    { "price": "asc" }
+  ]
+}
+
+GET /products/_search
+{
+  "query": {
+    "bool": {
+      "must": { "match": { "description": "fast laptop" } },
+      "filter": [
+        { "range": { "price": { "gte": 500, "lte": 1500 } } },
+        { "term": { "availability": "in_stock" } },
+        { "term": { "category": "electronics" } }
+      ]
+    }
+  },
+  "sort": [
+    { "price": "asc" }
+  ]
+}
+
+2. Use Appropriate Data Types
+PUT /products
+{
+  "mappings": {
+    "properties": {
+      "name": { "type": "text" },
+      "description": { "type": "text" },
+      "category": { "type": "keyword" },
+      "price": { "type": "float" }
+    }
+  }
+}
+
+3. Paginate Large Result Sets
+Fetching large result sets in one go can be resource-intensive. Use pagination to handle large queries efficiently.
+
+Example:
+
+GET /my_index/_search
+{
+  "from": 0,
+  "size": 10,
+  "query": {
+    "match": {
+      "description": "elasticsearch"
+    }
+  }
+}
+
+3. Enable and Use Caching
+Filters are automatically cached by Elasticsearch. Ensure that your frequently used filters can take advantage of this caching.
+Elasticsearch can cache the results of frequently run queries.
+
+GET /my_index/_search
+{
+  "query": {
+    "match": {
+      "description": "elasticsearch"
+    }
+  },
+  "request_cache": true
+}
+
+4: Use Index Templates
+Ensure new indices follow optimized settings and mappings using index templates.
+
+PUT /_template/products_template
+{
+  "index_patterns": ["products*"],
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "properties": {
+      "description": { "type": "text" },
+      "price": { "type": "float" },
+      "availability": { "type": "keyword" },
+      "category": { "type": "keyword" }
+    }
+  }
+}
+
+5. Optimize Index Settings : Tweak index settings for optimal search performance. Adjust the refresh_interval and number_of_replicas settings based on your search and indexing needs.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Speeding up data ingestion in Elasticsearch is crucial for handling large volumes of data efficiently. Here are several strategies and best practices to optimize ingestion performance:
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+1. Use Bulk API
+The Bulk API allows you to send multiple index, update, and delete operations in a single request, significantly reducing the overhead associated with individual requests.
+
+POST /_bulk
+{ "index": { "_index": "my_index", "_id": "1" } }
+{ "field1": "value1", "field2": "value2" }
+{ "index": { "_index": "my_index", "_id": "2" } }
+{ "field1": "value3", "field2": "value4" }
+
+2. Optimize Index Settings for Bulk Ingestion
+Adjust index settings to reduce resource consumption during bulk indexing. After bulk operations, you can revert these settings to optimize for search.
+
+PUT /my_index/_settings
+{
+  "settings": {
+    "number_of_replicas": 0,  // Set replicas to 0 during ingestion
+    "refresh_interval": "-1", // Disable automatic refresh
+    "index.translog.durability": "async" // Use async translog for better performance
+  }
+}
+After completing the bulk indexing, revert the settings:
+
+PUT /my_index/_settings
+{
+  "settings": {
+    "number_of_replicas": 1,
+    "refresh_interval": "1s",
+    "index.translog.durability": "request"
+  }
+}
+
+3. Use Appropriate Mapping and Templates
+Define mappings and templates upfront to avoid dynamic mapping updates during ingestion, which can slow down the process.
+
+PUT /_template/my_template
+{
+  "index_patterns": ["my_index*"],
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "properties": {
+      "field1": { "type": "keyword" },
+      "field2": { "type": "text" }
+    }
+  }
+}
+
+4. Adjust Shard and Replica Settings
+The number of shards and replicas can impact indexing performance. More shards can improve indexing throughput, but too many can lead to increased overhead.
+
+PUT /my_index
+{
+  "settings": {
+    "number_of_shards": 5, // Increase shards for higher parallelism
+    "number_of_replicas": 0 // Set replicas to 0 during ingestion
+  }
+}
+
+5. Tune JVM and Heap Settings
+Ensure Elasticsearch has sufficient heap memory. The heap size should be set to about 50% of the available system memory, but no more than 32 GB.
+
+Example JVM Options
+Configure heap size in jvm.options:
+
+-Xms16g
+-Xmx16g
+
+6. Use Index Lifecycle Management (ILM)
+ILM helps manage indices over their lifecycle, automating actions like rollover and shrink, which can optimize performance.
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+In Elasticsearch, highlighters are used to highlight search results by wrapping search terms in a document with specified HTML tags
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Types: Unified, Plain, and Fast Vector Highlighters.
+Usage: Define highlight fields in the search query to get highlighted snippets.
+GET highlighting_demo/_search 
+{
+  "query": {
+    "match": {
+      "desc": "urbanization"
+    }
+  }
+  , "highlight": {
+    "fields": {
+      "desc": {
+        "type" : "unified",
+        "pre_tags": ["<strong>"],
+        "post_tags": ["</strong>"]
+      }
+    }
+  }
+}
+plain: Use if you have simple highlighting needs and want to minimize memory usage.
+unified: Use for the best balance between speed, memory usage, and feature support.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Split-Brain Scenario Explained
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Network Partition: The most common cause of a split-brain scenario is a network partition, where master-eligible nodes lose connectivity with each other.
+Misconfiguration: Improperly configured Elasticsearch settings, such as incorrect discovery and cluster formation settings, can lead to split-brain issues.
+Insufficient Master Nodes: Not having enough master-eligible nodes to form a quorum, leading to potential split-brain conditions.
+
+Set Minimum Master Nodes (discovery.zen.minimum_master_nodes):
+Formula: (N/2) + 1 where N is the number of master-eligible nodes.
+discovery.zen.minimum_master_nodes: 2
+
+Note: In Elasticsearch 7.x and later, discovery.zen.minimum_master_nodes is replaced by an automatic election mechanism.
+Use Dedicated Master Nodes:
+
+Configure dedicated master nodes that are not involved in handling client requests or data operations to reduce the load and increase stability.
+node.master: true
+node.data: false
+node.ingest: false
+Configure Master Node Voting:
+
+Use cluster.initial_master_nodes setting during initial cluster formation to define the initial master-eligible nodes.
+cluster.initial_master_nodes:
+  - node1
+  - node2
+  - node3
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+scoring Vs non-scoring fields 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Scoring Fields:Typically, fields containing textual data relevant to your search criteria are defined as scoring fields. These might include:
+Product names, titles , Descriptive text fields in blog posts , Usernames etc are scoring fields
+
+Non-scoring fields do not directly contribute to the relevance score of a document.
+Product categories , colors, Publication dates , User locations etc are non-scoring fields
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Please explain how to implement elasticsearch caching to improve search queries
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Elasticsearch caching can significantly improve search query performance by storing the results of frequently executed queries and filter conditions. 
+1. The Node Query Cache caches the results of filter queries (not full-text queries). This cache is local to each node and works at the shard level.
+By default, the node query cache is enabled. You can configure it through the elasticsearch.yml configuration file:
+indices.queries.cache.size: 10% # Cache size (percentage of heap)
+indices.queries.cache.count: 10000 # Maximum number of cached queries
+Example Usage:
+To use filters that benefit from node query caching, structure your query to use filters for parts that do not need scoring.
+GET /my_index/_search
+{
+  "query": {
+    "bool": {
+      "must": {
+        "match": { "description": "Elasticsearch" }
+      },
+      "filter": {
+        "term": { "status": "active" }
+      }
+    }
+  }
+}
+
+2. The Request Cache stores the results of the entire search request, not just filters. It is beneficial for searches that are repeated frequently and involve aggregations.
+
+PUT /my_index/_settings
+{
+  "index.requests.cache.enable": true
+}
+
+GET /my_index/_search
+{
+  "request_cache": true,
+  "query": {
+    "match": { "description": "Elasticsearch" }
+  },
+  "aggs": {
+    "status_count": {
+      "terms": { "field": "status" }
+    }
+  }
+}
+
+3. The Field Data Cache is used for aggregations, sorting, and scripting on text fields. It is memory-intensive and can be configured to manage its usage.
+
+Configuring Field Data Cache
+You can configure the size of the field data cache in the elasticsearch.yml file:
+
+indices.fielddata.cache.size: 40% # Cache size (percentage of heap)
+Clearing Field Data Cache:
+If you need to clear the field data cache (e.g., to free up memory), use:
+
+POST /my_index/_cache/clear?fielddata=true
+
+Monitoring Cache Usage
+You can monitor the cache usage to understand its impact and adjust settings as needed.
+
+Query Cache Statistics:
+GET /_nodes/stats/indices/query_cache
+
+Request Cache Statistics:
+GET /_nodes/stats/indices/request_cache
+
+Field Data Cache Statistics:
+GET /_nodes/stats/indices/fielddata
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is relevance score in elasticsearch please explain with an example
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+In Elasticsearch, relevance score is a numerical value assigned to each document retrieved by a search query. This score indicates how well a document matches the user's search intent, essentially determining the order in which search results are presented. Documents with higher relevance scores are ranked higher and displayed first in the search results.
+
+Imagine you have an e-commerce store with an Elasticsearch index for product data. The documents contain fields like product_name, description, category, and price.
+
+Scenario: A user searches for "running shoes".
+Search Query:  Elasticsearch parses the query and identifies "running shoes" as the search term to look for within the product data.
+
+Document Retrieval:  Elasticsearch retrieves documents from the index that potentially match the search term. This might include various products containing "running shoes" in the product_name, description, or even some categories.
+
+Relevance Scoring:  For each retrieved document, Elasticsearch calculates a relevance score based on factors like:
+
+Term Frequency (TF): How many times "running shoes" appears in the document (title, description, etc.)
+Inverse Document Frequency (IDF): How common "running shoes" is across all products in the index (less common terms contribute more to score).
+Field Length: Documents with "running shoes" prominently mentioned (e.g., in the product name) might score higher than documents with it buried within a lengthy description.
+Ranking and Presentation:  Finally, Elasticsearch ranks the retrieved documents based on their relevance scores. Products with a higher score for "running shoes" will be displayed first in the search results, followed by those with lower scores.
+
+Example:
+
+Product A: Name: Running Shoes for Men, Description: Comfortable running shoes... (mentions "running shoes" twice)
+Product B: Name: Athletic Shoes, Description: These shoes are great for various activities, including running... (mentions "running" once)
+In this scenario, Product A might receive a higher relevance score for the search term "running shoes" due to a higher term frequency within the product name. This would likely lead it to be ranked higher in the search results compared to Product B.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is Query Profiling in elasticsearch please explain with an example
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Query profiling in Elasticsearch is a feature that allows you to get detailed information about the execution of search queries. This feature helps you understand the performance characteristics of your queries and identify any bottlenecks or inefficiencies in their execution. The profiling output includes information about each phase of query execution, such as query parsing, execution, and fetching results.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+What is replication factor in elasticsearch
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Primary shards determine the actual data.
+Replica shards provide backup of original data and improve read performance.
+Replication factor indicates the total number of copies of the data.
+lets say Primary Shards: 5
+No of Replica : 2 , primary shards * 2 replicas = 10 replica shards
+Total Shards: 5 primary shards + 10 replica shards = 15 shards in total
+Replication Factor: 3 (1 primary shard + 2 replicas)
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Elasticsearch routing 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Elasticsearch uses the Murmur3 hashing function to calculate the hash value of the routing key (or document ID if no custom routing is provided).
+The hash value is then used with the modulus operation to determine the shard number:
+shard = hash % number_of_primary_shards
+
+Lets say hash value of a document ID 1 is 90fb3fe5 and no of primary shard is 5 , then 
+shard = 90fb3fe5 % 5 = 2
+The value of 90fb3fe5 % 5 is 2. 
+This means that if 90fb3fe5 were used as a hash value for routing in Elasticsearch, the document would be assigned to shard number 2. ​​
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Eplain bulk operation in elasticsearch 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Bulk operations in Elasticsearch are used to perform multiple index, update, and delete operations in a single API call. 
+This is highly efficient for handling large volumes of data because it reduces the overhead associated with multiple network round trips and can significantly improve indexing performance.
+
+Bulk API Overview
+The Bulk API allows you to perform multiple operations in a single request, which can include:
+
+Indexing new documents.
+Updating existing documents.
+Deleting documents.
+Benefits of Using Bulk Operations
+Efficiency: Reduces network overhead by bundling multiple operations into a single request.
+Performance: Improves indexing speed and reduces latency.
+Atomicity: Ensures that all operations within the bulk request are executed together.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+When to use PUT vs POST 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PUT is used when:
+
+You want to create or update a document and specify its ID.
+You need idempotent operations where multiple identical requests have the same effect.
+
+POST is used when:
+
+You want Elasticsearch to generate the document ID.
+Performing bulk operations.
+Executing search queries or aggregations.
+Performing partial updates on documents.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How to findout expansive queries on elasticsearch 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+GET /_tasks?detailed=true&actions=*search
+GET /_cat/tasks?v&detailed
+Enable Slow Logs
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Explain the concept of sharding and replication in Elasticsearch and how you would optimize them for a specific use case (e.g., high ingest rate, real-time analytics)?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A: Sharding partitions the Elasticsearch index into smaller segments, allowing for parallel search operations and improved scalability. Replication creates copies of each shard on different nodes, ensuring data redundancy and availability in case of node failures.
+For a high ingest rate use case, I would configure a larger number of shards to distribute the load and enable faster indexing. Additionally, auto-scaling features can be used to dynamically adjust the number of data nodes based on incoming data volume.
+For real-time analytics, a lower replication factor might be acceptable to prioritize speed over high availability. However, the specific configuration depends on the trade-off between performance, data durability, and fault tolerance required for the use case.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Q: How would you design and implement a security strategy for the ELK Stack, including user authentication, authorization, and data encryption?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Enable X-Pack Security:xpack.security.enabled: true
+Create Built-In Users:bin/elasticsearch-setup-passwords interactive
+Configure Users and Roles:
+Enable TLS for Elasticsearch:
+Enable HTTPS for HTTP Layer:
+Enable auditing in Elasticsearch 
+
+on kibana enable security 
+xpack.security.enabled: true
+elasticsearch.username: "kibana_system"
+elasticsearch.password: "kibana_password"
+Create Users and Roles for Kibana:
+Secure Kibana with HTTPS
+
+on Logstash Secure Logstash to Elasticsearch Communication:
+output {
+  elasticsearch {
+    hosts => ["localhost:9200"]
+    user => "logstash_user"
+    password => "logstash_password"
+    ssl => true
+    cacert => "/path/to/ca.crt"
+  }
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Q: Describe how you would integrate the ELK Stack with other tools and platforms (e.g., SIEM tools, cloud monitoring services)?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A: The ELK Stack offers various integration possibilities:
+
+Beats: Lightweight data shippers like Filebeat or Metricbeat can collect data from various sources and send it to Logstash for processing and ingestion into Elasticsearch.
+APIs: Utilize Elasticsearch and Kibana APIs to integrate with SIEM tools for centralized security event management or cloud monitoring services for log analysis and visualization within their platforms.
+Plugins: Explore community-developed plugins that extend the ELK Stack functionalities for specific integrations.
+Troubleshooting and Optimization:
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Q:  Describe your approach to troubleshooting a situation where Kibana dashboards are slow to load or display visualizations?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A: Here's a troubleshooting approach for slow Kibana dashboards:
+
+Analyze Kibana logs: Identify any errors or performance bottlenecks within Kibana itself.
+Optimize Queries: Review Elasticsearch queries used by Kibana visualizations for potential inefficiencies. Consider using aggregations, filtering at the Elasticsearch level, and optimizing field data types for faster retrieval.
+Resource Utilization: Monitor resource utilization on Elasticsearch nodes (CPU, memory, disk I/O). If resources are maxed out, consider scaling Elasticsearch clusters horizontally or vertically.
+Caching: Configure caching mechanisms in Kibana to reduce the load on Elasticsearch for frequently accessed data.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Describe your approach to scaling the ELK Stack to accommodate increasing data volume and user traffic?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A:  Scaling the ELK Stack involves both horizontal and vertical scaling:
+
+Horizontal Scaling: Add more nodes to the Elasticsearch cluster to distribute the load and increase processing power. Utilize tools like autoscaling to automatically adjust the number of nodes based on resource requirements.
+Vertical Scaling: Increase the resources (CPU, memory, storage) of existing nodes to improve performance. Consider using resource-intensive hardware like SSDs for faster data access.
+Sharding and Replication Optimization: Review and adjust sharding and replication configurations based on data growth and access patterns.
+Resource Monitoring: Continuously monitor resource utilization (CPU, memory, disk I/O) on all nodes to identify bottlenecks and plan scaling actions proactively.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How would you design an alerting system for the ELK Stack to notify stakeholders of critical events or potential issues?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A:  An effective alerting system utilizes Elasticsearch queries and Kibana features:
+
+Define Watchers: Create Watchers in Kibana that continuously monitor specific data streams within Elasticsearch. These Watchers can trigger alerts based on predefined conditions (e.g., exceeding error thresholds, abnormal traffic patterns).
+Configure Alerting Channels: Configure Watchers to send notifications through various channels like email, SMS, or integration with alerting platforms (e.g., Slack, PagerDuty) based on the urgency and audience for the alert.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Q:  Describe your experience with automating tasks within the ELK Stack using scripting languages or APIs?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A:  Automating tasks with the ELK Stack improves efficiency and reduces human error:
+
+Utilize Scripting Languages: Leverage scripting languages like Painless within Elasticsearch to automate data manipulation tasks during indexing or searching.
+Automate Pipeline Management: Use tools like Ansible or Chef to automate Logstash pipeline deployment and configuration management.
+Utilize APIs: Utilize Elasticsearch and Kibana APIs to automate tasks like creating or updating indices, managing dashboards, and triggering searches programmatically.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How would you approach troubleshooting slow search queries in Elasticsearch?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A: Here's a troubleshooting strategy for slow Elasticsearch queries:
+
+Analyze Query Performance: Utilize Kibana features like Explain API or Profiling tools to pinpoint slow portions of the search query.
+Review Sharding and Indexing: Ensure optimal sharding strategy and analyze field data types to optimize indexing for faster retrieval.
+Optimize Queries: Refine Elasticsearch queries using techniques like filtering at the Elasticsearch level, aggregations, and proper field selection to reduce data returned.
+Caching: Consider implementing caching mechanisms in Kibana to reduce load on Elasticsearch for frequently accessed data.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Q:  Describe your experience with monitoring and optimizing the performance of Logstash pipelines?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A: Efficient Logstash pipelines are crucial for smooth data ingestion:
+
+Monitor Pipeline Performance: Utilize monitoring tools to track pipeline execution times, errors, and resource usage.
+Identify Bottlenecks: Analyze pipeline logs and resource utilization to identify slow processing stages.
+Optimize Filters and Codecs: Ensure filters and codecs are optimized for the specific data format and processing tasks. Consider asynchronous processing for heavy workloads.
+Caching and Batching: Implement caching mechanisms for frequently used transformations and explore batch processing for large data volumes to improve throughput.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+how to implementing caching mechanisms in Kibana
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+While Kibana itself doesn't have built-in caching mechanisms, there are two main approaches to implement caching for visualizations and dashboards:
+
+1. Leverage Caching on the Elasticsearch Layer:
+
+This is the most common and recommended approach. Caching happens at the data source level (Elasticsearch) and improves performance for frequently accessed data visualizations in Kibana.
+Here's how to implement caching on Elasticsearch:
+
+Fielddata Caching:** Configure frequently used fields in your Elasticsearch mappings to be stored as fielddata. This allows faster retrieval for aggregations and filters in Kibana queries.
+Query Cache:** Enable the query cache on your Elasticsearch cluster. This caches recently executed search queries and their results, reducing the need to re-execute the same query for subsequent Kibana visualizations that utilize it.
+Indices Lifecycle Management (ILM):** Utilize ILM to manage your Elasticsearch indices. ILM can automatically move older indices to a different tier (e.g., colder storage) while keeping frequently accessed data readily available in a "hot" tier with caching enabled.
+
+2. Client-side Caching with Browser Caching Mechanisms:
+
+This approach caches visualizations directly on the user's browser for a limited time. It's less common for real-time data scenarios but can be helpful for static dashboards that don't change frequently.
+Here's how to implement client-side caching:
+
+Browser Cache Headers:** Set appropriate HTTP headers (e.g., Cache-Control) on your Kibana server to instruct browsers to cache specific visualizations or dashboard elements for a defined duration.
+Browser Caching Libraries:** Explore libraries like `localForage` or `sessionStorage` within your Kibana custom visualizations or plugins to manage caching behavior at the client-side.
+
+Choosing the Right Approach:
+
+The best approach depends on your specific needs:
+
+For real-time data visualizations that update frequently, prioritize caching on the Elasticsearch layer.
+For static dashboards with less frequent updates, consider a combination of caching on both Elasticsearch and the browser.
+Additional Tips:
+
+Monitor Caching Efficiency: Track the effectiveness of caching mechanisms by monitoring cache hit rates and visualization loading times.
+Invalidate Cache When Needed: Implement mechanisms to invalidate cached data when the underlying data in Elasticsearch changes significantly to ensure visualizations display accurate information.
+By implementing caching strategies effectively, you can significantly improve the performance and responsiveness of your Kibana dashboards, especially for users accessing visualizations with frequently queried data.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Describe the difference between match, term, and range queries in Elasticsearch.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+match query analyzes the text before searching, suitable for full-text search. 
+term query does not analyze the text and is used for exact matches, typically for keyword fields. 
+range query is used for numeric, date, and other range-based queries.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Can you describe the process of reindexing data and why it might be necessary?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Reindexing involves copying data from one index to another, often required when changing mappings, analyzers, or settings. This can be done using the _reindex API in Elasticsearch.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Explain how Logstash works and how you would configure it to ingest data from multiple sources.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Logstash is a data processing pipeline that ingests, transforms, and sends data. It uses plugins for input (e.g., beats, file, JDBC), filters (e.g., grok, mutate), and outputs (e.g., Elasticsearch, Kafka). Configuring Logstash involves setting up these plugins in the configuration file.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How do you monitor the health and performance of your ELK stack?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Monitor using tools like Elasticsearch's own monitoring features (X-Pack Monitoring), Grafana with Elasticsearch plugins, and setting up alerts for key performance indicators (KPIs) such as query latency, node health, and cluster status.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Describe how you would set up an Elasticsearch cluster for high availability.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Set up multiple master-eligible nodes, distribute shards and replicas across different nodes, ensure there are sufficient data nodes, use dedicated master and data nodes, and configure snapshot and restore for disaster recovery.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What are the challenges of scaling Elasticsearch and how do you overcome them?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Challenges include shard management, ensuring balanced resource utilization, and maintaining query performance. Overcome them by proper shard planning, using index lifecycle management (ILM), and scaling horizontally by adding nodes.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How do you secure an Elasticsearch cluster?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Use built-in security features like TLS/SSL for encrypted communication, configure user authentication and role-based access control, and secure the cluster with firewall rules and network policies.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What are the ways to implement user authentication for kibana
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+There are two main ways to implement user authentication for Kibana:
+
+1. Leverage Elasticsearch Security (Recommended):
+
+This is the recommended approach as it utilizes the built-in security features of Elasticsearch, which Kibana relies on for data. Here's what's involved:
+
+Enable Security in Elasticsearch: This involves setting xpack.security.enabled: true in the Elasticsearch configuration file.
+Create Users and Roles: Define users within Elasticsearch and assign them roles that grant specific access levels within Kibana. Roles control what users can see and interact with in Kibana (dashboards, visualizations, etc.).
+Configure Kibana Authentication: Kibana will automatically inherit user authentication from the configured security in Elasticsearch.
+This approach provides a centralized security solution for both Elasticsearch and Kibana.
+
+2. Reverse Proxy with External Authentication (Alternative):
+
+This method involves using a reverse proxy server like Nginx in front of Kibana to handle user authentication:
+
+Choose an External Authentication Provider: You can integrate with various providers like LDAP, Active Directory, or implement custom authentication logic.
+Configure Nginx as Reverse Proxy: Nginx acts as a gatekeeper, intercepting requests before they reach Kibana. It communicates with the chosen authentication provider to verify user credentials.
+Integrate with Kibana: Once authenticated by Nginx, users can access Kibana. Nginx might pass user information for authorization within Kibana (optional, depending on your setup).
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Explain a complex ELK stack implementation project you have worked on. What were the key challenges and how did you address them?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Example: Implementing a centralized logging system for microservices. Challenges included handling high log volume and ensuring low-latency search. Addressed by optimizing Logstash pipelines, configuring Elasticsearch for efficient indexing, and setting up Kibana for real-time monitoring.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is the difference between authentication and authorization
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Authentication and authorization are two fundamental concepts in computer security that work together to control access to resources. They may sound similar, but they address different stages of the access control process.
+
+Authentication is all about verifying a user's identity. When you log in to a system, application, or website, you typically provide some credentials, like a username and password. The system checks these credentials against a database to see if they match a valid user.  If they do, you're authenticated - the system recognizes you as who you say you are.
+
+Authorization, on the other hand, is about what you can do once you're authenticated.  Even if you've proven your identity, you might not have permission to do everything.  Authorization determines what actions you are allowed to take and what data you can access.  For instance, different user accounts on a computer system might have different levels of access to files and folders.
+
+Here's an analogy to illustrate the difference: Imagine entering a building.  Authentication is like showing your ID at the security desk to prove you're allowed to be there. Authorization is like having a specific keycard that gives you access to certain floors or rooms within the building.
+
+In short:
+
+Authentication answers the question "Who are you?"
+Authorization answers the question "What are you allowed to do?"
+Both authentication and authorization are essential for maintaining a secure system.  By working together, they ensure that only authorized users can access sensitive information and perform specific actions.
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How to verify logstash pipeline is working properly or not
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Check Logstash Configuration:/usr/share/logstash/bin/logstash --config.test_and_exit -f /path/to/your/logstash.conf
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  grok {
+    match => { "message" => "%{COMBINEDAPACHELOG}" }
+  }
+  date {
+    match => [ "timestamp" , "dd/MMM/yyyy:HH:mm:ss Z" ]
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["localhost:9200"]
+    index => "apache-logs-%{+YYYY.MM.dd}"
+  }
+  stdout { codec => rubydebug }
+}
+# performance tuning
+pipeline.workers: 4 # his setting specifies the number of worker threads that Logstash uses to execute filter and output stages of the pipeline
+pipeline.batch.size: 2048 # This setting determines the number of events that are processed together in a single batch by each pipeline worker
+pipeline.batch.delay: 5 # This setting defines the maximum amount of time in milliseconds that Logstash will wait before processing an incomplete batch of events
+queue.type: persisted # This setting defines the type of internal queue that Logstash uses to buffer events between the input and filter stages
+LS_HEAP_SIZE="4g"
+
+Start Logstash:/usr/share/logstash/bin/logstash -f /path/to/your/logstash.conf
+Check Logstash Logs:tail -f /var/log/logstash/logstash-plain.log
+Monitor Pipeline Status:curl -XGET 'http://localhost:9600/_node/pipelines?pretty'
+Use Logstash's stdout Plugin for Debugging:
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How does the grok , mutate filter work in Logstash?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Grok Filter: The grok filter is used for parsing unstructured log data and extracting structured data based on patterns.
+
+filter {
+  grok {
+    match => { "message" => "%{COMBINEDAPACHELOG}" }
+  }
+}
+
+Mutate Filter: The mutate filter is used for general modifications to event fields, such as renaming, removing, converting types, and updating field values.
+
+filter {
+  mutate {
+    rename => { "src_ip" => "source_ip" }
+    remove_field => ["unnecessary_field"]
+  }
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How can you handle high cardinality fields in Logstash?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+High cardinality fields can cause performance issues in Elasticsearch. In Logstash, you can handle these by:
+
+Removing unnecessary fields using the mutate filter.
+Renaming or aliasing fields to reduce cardinality.
+Using prune filter to remove fields based on conditions.
+filter {
+  prune {
+    whitelist_names => ["^message$", "^@timestamp$", "^important_field$"]
+  }
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Explain how the Logstash monitoring API works.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The Logstash monitoring API provides endpoints to monitor the health and performance of Logstash pipelines. It includes information on pipeline statistics, JVM metrics, and event rates.
+xpack.monitoring.enabled: true
+xpack.monitoring.elasticsearch.hosts: ["http://localhost:9200"]
+Access the API at http://localhost:9600/_node/stats.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How do you secure Logstash?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Using TLS: Encrypt traffic between Logstash and its inputs/outputs.
+input {
+  beats {
+    port => 5044
+    ssl => true
+    ssl_certificate => "/path/to/cert.pem"
+    ssl_key => "/path/to/key.pem"
+  }
+}
+Authentication: Enable user authentication for APIs and pipelines.
+File Permissions: Ensure Logstash configuration files and data directories have the appropriate file permissions.
+X-Pack Security: Use X-Pack security features if using Elasticsearch.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How do you use conditionals in Logstash configuration?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+filter {
+  if [type] == "apache" {
+    grok {
+      match => { "message" => "%{COMBINEDAPACHELOG}" }
+    }
+  } else if [type] == "syslog" {
+    grok {
+      match => { "message" => "%{SYSLOGLINE}" }
+    }
+  } else {
+    drop { }
+  }
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is the meaning of field and  cardinality in elasticsearch 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+In Elasticsearch, data is organized within documents, and each document is made up of fields. These fields act like named attributes that hold specific information about the data you're storing. Here's a breakdown of fields and cardinality in Elasticsearch:
+Data Types: Each field has a data type associated with it. This data type specifies the format and nature of the data stored within the field. Common data types in Elasticsearch include strings, integers, dates, booleans, and more.
+product_name (string)
+price (integer)
+category (string)
+in_stock (boolean)
+
+Cardinality refers to the number of unique values a specific field can hold within your Elasticsearch index. In simpler terms, it represents the distinct variations of data within that field.
+High Cardinality: A user_id field is likely to have high cardinality as there can be millions of unique user IDs.
+Low Cardinality: A country field might have lower cardinality as there are a limited number of countries in the world.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Elasticsearch has undergone significant changes from version 1.4 to 7.0, enhancing its performance, scalability, and ease of use, especially in the context of DevOps roles. Below are some of the major changes and improvements:
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Zen Discovery to Zen2: Zen2, introduced in Elasticsearch 7.0, offers more reliable and simpler cluster coordination. It includes a new cluster bootstrapping process and improved fault detection.
+Voting Configuration: Simplifies the management of master-eligible nodes and helps in reducing split-brain scenarios.
+Dynamic index templates have been introduced, allowing for more flexible and powerful index configurations.
+Index Lifecycle Management (ILM):Introduced in 6.x and enhanced in 7.0, ILM helps manage indices through their lifecycle, automating tasks such as rollover, shrink, and deletion based on defined policies.
+
+Example Configuration Changes for DevOps
+Cluster Bootstrapping (Zen2):
+
+cluster.initial_master_nodes:
+  - master-node-1
+  - master-node-2
+  - master-node-3
+
+Index Lifecycle Management Policy:
+
+{
+  "policy": {
+    "phases": {
+      "hot": {
+        "actions": {
+          "rollover": {
+            "max_size": "50GB",
+            "max_age": "30d"
+          }
+        }
+      },
+      "delete": {
+        "min_age": "90d",
+        "actions": {
+          "delete": {}
+        }
+      }
+    }
+  }
+}
+
+Security Configuration:
+xpack.security.enabled: true
+xpack.security.transport.ssl.enabled: true
+xpack.security.http.ssl.enabled: true
+xpack.security.authc.realms.native.native1.order: 0
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

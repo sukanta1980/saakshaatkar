@@ -1,0 +1,83 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is Terraform and how does it differ from other Infrastructure as Code (IaC) tools?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Terraform is an open-source IaC tool developed by HashiCorp that allows users to define and provision data center infrastructure using a high-level configuration language (HCL). Key differences from other IaC tools include:
+State Management: Terraform uses a state file to keep track of infrastructure resources.
+Multi-Provider Support: It supports multiple cloud providers (AWS, Azure, GCP, etc.) and services.
+Immutable Infrastructure: Promotes the practice of immutable infrastructure, where updates involve replacing resources rather than modifying them in place.
+Dependency Graph: Automatically manages dependencies between resources to ensure correct order of operations.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How do you manage state in Terraform, and why is it important?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Local State: Stored on the local filesystem, useful for small-scale projects or learning purposes.
+Remote State: Stored remotely (e.g., in AWS S3, Azure Blob Storage, or Terraform Cloud) to allow for team collaboration and state locking to prevent concurrent modifications.
+State Locking: Ensures that only one user can modify the state at a time to prevent conflicts. Supported by backends like AWS S3 with DynamoDB, Terraform Cloud, etc.
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state"
+    key            = "path/to/my/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-lock-table"
+    encrypt        = true
+  }
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is a Terraform module, and how do you use it?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A Terraform module is a container for multiple resources that are used together. Modules help organize code, promote reusability, and simplify complex configurations.
+Create a Module: Define a module in its directory with main.tf, variables.tf, and outputs.tf.
+Use a Module: In your root configuration, use the module block to call the module:
+
+module "network" {
+  source = "./modules/network"
+  vpc_id = var.vpc_id
+}
+Variables and Outputs: Pass variables to the module and access outputs for integration with other parts of your configuration.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Explain the terraform init command and its significance.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+The terraform init command initializes a Terraform configuration directory. It performs several tasks:
+Plugin Installation: Downloads and installs provider plugins.
+Backend Initialization: Sets up the backend configuration for state management.
+Module Initialization: Downloads and installs modules defined in the configuration.
+Significance: It is a crucial first step before running any other Terraform commands (plan, apply, etc.), ensuring all necessary components are in place.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How can you manage sensitive data in Terraform?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Secret Management Services: Integrate with secret management services like AWS Secrets Manager, Azure Key Vault, or HashiCorp Vault to securely retrieve and manage secrets.
+Environment Variables: Use environment variables to pass sensitive data securely.
+Terraform Variables: Mark variables as sensitive in your variables.tf file to prevent them from being displayed in the logs.
+variable "db_password" {
+  type      = string
+  sensitive = true
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How do you handle dependencies between resources in Terraform?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Terraform automatically handles dependencies between resources using its dependency graph.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What are workspaces in Terraform, and how do you use them?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Terraform workspaces allow you to manage multiple environments (e.g., development, staging, production) with a single configuration.
+
+resource "aws_s3_bucket" "example" {
+  bucket = "my-bucket-${terraform.workspace}"
+}
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+How do you debug and troubleshoot issues in Terraform?
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+export TF_LOG=DEBUG

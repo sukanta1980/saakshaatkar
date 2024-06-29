@@ -1,0 +1,71 @@
+sukanta@Sukantas-iMac ~ % cat ~/.kube/config
+apiVersion: v1
+clusters:
+- cluster:
+    server: https://colima:6443
+  name: ""
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJkekNDQVIyZ0F3SUJBZ0lCQURBS0JnZ3Foa2pPUFFRREFqQWpNU0V3SHdZRFZRUUREQmhyTTNNdGMyVnkKZG1WeUxXTmhRREUzTVRneE56TTVNakl3SGhjTk1qUXdOakV5TURZek1qQXlXaGNOTXpRd05qRXdNRFl6TWpBeQpXakFqTVNFd0h3WURWUVFEREJock0zTXRjMlZ5ZG1WeUxXTmhRREUzTVRneE56TTVNakl3V1RBVEJnY3Foa2pPClBRSUJCZ2dxaGtqT1BRTUJCd05DQUFSTitybTVlcytKWTR3MzNNUHR3WVRaUVZrajJqNjdwRGZ6amIvdWtiWEYKTFE1TWFtYWpETjNQczN0WjZUcGxCd1oyRnBuaC9KVGFqd0pFdVRPeDRYeXFvMEl3UURBT0JnTlZIUThCQWY4RQpCQU1DQXFRd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFRmdRVTNOa1UzYTBJd1lDUUhRTDVkMTFFCnhzcTBEVnN3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloQU5XWDFJamNOekdwVURRejNQTXpjbWNVVUdIeHluMDMKRURXQkl3Um1jU2FsQWlBTWFnY2ZodDZEbHJtOHl4NEJYdzdSSkxzT1ZNNEVBckdHWlVKMytJcDgxZz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    server: https://127.0.0.1:6443
+  name: colima
+contexts:
+- context:
+    cluster: colima
+    user: colima
+  name: colima
+current-context: colima
+kind: Config
+preferences: {}
+users:
+- name: colima
+  user:
+    client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJrakNDQVRlZ0F3SUJBZ0lJQXlEMjNmZkREK1l3Q2dZSUtvWkl6ajBFQXdJd0l6RWhNQjhHQTFVRUF3d1kKYXpOekxXTnNhV1Z1ZEMxallVQXhOekU0TVRjek9USXlNQjRYRFRJME1EWXhNakEyTXpJd01sb1hEVEkxTURZeApNakEyTXpJd01sb3dNREVYTUJVR0ExVUVDaE1PYzNsemRHVnRPbTFoYzNSbGNuTXhGVEFUQmdOVkJBTVRESE41CmMzUmxiVHBoWkcxcGJqQlpNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VIQTBJQUJQdU1HcVpoNDdpSFY1T1UKckJueDk4L2RNdStCRGg3KytqQjdlbmFtTmxDclRONkw2Rkx4YWNBdWtEaGt5N0tjajBHYk1vSkpud1IxdDRuSwo4cXF2c0hxalNEQkdNQTRHQTFVZER3RUIvd1FFQXdJRm9EQVRCZ05WSFNVRUREQUtCZ2dyQmdFRkJRY0RBakFmCkJnTlZIU01FR0RBV2dCUWdQU0NuVGJkOW1oOE5kU1dkdzc5OHcwZFVRekFLQmdncWhrak9QUVFEQWdOSkFEQkcKQWlFQXh1NC96YUo0TGIwWVc4WTRCekc1THhlZkpiVGlDWmtlOTRUcVRZcWdINndDSVFDSHlvaGZHWWVOL3RyNQowYVhYdEI5M3FwM2w5WjUrblVjVnFyMXRjQ3NCWEE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCi0tLS0tQkVHSU4gQ0VSVElGSUNBVEUtLS0tLQpNSUlCZHpDQ0FSMmdBd0lCQWdJQkFEQUtCZ2dxaGtqT1BRUURBakFqTVNFd0h3WURWUVFEREJock0zTXRZMnhwClpXNTBMV05oUURFM01UZ3hOek01TWpJd0hoY05NalF3TmpFeU1EWXpNakF5V2hjTk16UXdOakV3TURZek1qQXkKV2pBak1TRXdId1lEVlFRRERCaHJNM010WTJ4cFpXNTBMV05oUURFM01UZ3hOek01TWpJd1dUQVRCZ2NxaGtqTwpQUUlCQmdncWhrak9QUU1CQndOQ0FBUk5NMkFseEU0Y1ZtVjJoelNoUXBqYTRKcEErNzZIOFE5bGR4Y1I3dmlZCkVLZHJYZDVxaExQd1dGMm9iZ25NR1poUGZUNERyZm5qZXBjbHFUOWE5ODMybzBJd1FEQU9CZ05WSFE4QkFmOEUKQkFNQ0FxUXdEd1lEVlIwVEFRSC9CQVV3QXdFQi96QWRCZ05WSFE0RUZnUVVJRDBncDAyM2Zab2ZEWFVsbmNPLwpmTU5IVkVNd0NnWUlLb1pJemowRUF3SURTQUF3UlFJaEFPSXZvdHkrcTFHSGpLUHlMR1NQWHpOMDV4Y01EQ2luCkhsNWgyS1RFRTRnSUFpQjNEa1h4Y0M5T0FjdkFqNFJyWDVtYWFyN05ER2hXeE1rbWtsM1VOdG9zZUE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    client-key-data: LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSU92WUVXZWtMei9udXNSQ09VU2czQzRMYW1LN2QydjNsdEpXNWlZUU0wRXlvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFKzR3YXBtSGp1SWRYazVTc0dmSDN6OTB5NzRFT0h2NzZNSHQ2ZHFZMlVLdE0zb3ZvVXZGcAp3QzZRT0dUTHNweVBRWnN5Z2ttZkJIVzNpY3J5cXErd2VnPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo=
+- name: minikube
+  user:
+    client-certificate: /Users/sukanta/.minikube/profiles/minikube/client.crt
+    client-key: /Users/sukanta/.minikube/profiles/minikube/client.key
+
+colima stop
+colima start --with-kubernetes
+
+kubectl cluster-info
+Kubernetes control plane is running at https://127.0.0.1:6443
+CoreDNS is running at https://127.0.0.1:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+Metrics-server is running at https://127.0.0.1:6443/api/v1/namespaces/kube-system/services/https:metrics-server:https/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+kubectl get nodes
+NAME     STATUS   ROLES                  AGE   VERSION
+colima   Ready    control-plane,master   42m   v1.28.3+k3s2
+
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+https://localhost:8080/applications
+
+The default username is admin. The password can be retrieved with:
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+
+
+export ARGOCD_SERVER=https://localhost:8080
+
+
+argocd app create my-app --repo https://github.com/my/repo.git --path my-app-directory --dest-server https://localhost:443 --dest-namespace my-app
+argocd app create my-app --repo https://github.com/my/repo.git --path my-app-directory --dest-namespace my-app
+
+
+Ensure Metrics Server is installed:
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+Display pods sort by cpu/mem
+
+kubectl top pods -n argocd | sort -n -k 3
+
+Identify Unused NodePorts
+kubectl get services --all-namespaces -o jsonpath="{.items[*].spec.ports[*].nodePort}"
+
+
+s7rX9Jv017CQ0Pr3Hs338tck
+
+curl -u "elastic:$PASSWORD" -k "https://quickstart-es-http:9200"
+curl -u "elastic:s7rX9Jv017CQ0Pr3Hs338tck" -k "https://localhost:9200"
