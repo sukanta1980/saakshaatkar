@@ -393,8 +393,97 @@ spec:
         averageUtilization: 80  # Scale up if CPU usage exceeds 80%
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What are the other ways to forward port
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+1. NodePort Service
+2. LoadBalancer Service
+3. Ingress with Different Controllers
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Please help me understand what are the ways we can forward port 443 to port 8080 which running on kubernetes pods , explain with example
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+To forward port 443 (HTTPS) to port 8080 on Kubernetes pods, you can use a Kubernetes Service along with an Ingress resource. Here's a step-by-step explanation and example:
+
+Deployment: Deploy your application on port 8080.
+Service: Expose the application within the cluster on port 8080.
+Ingress: Use an Ingress resource to handle HTTPS traffic on port 443 and forward it to the Service on port 8080.
+TLS Secret: Store your TLS certificate and key in a Kubernetes Secret.
+This setup ensures that external traffic to https://my-app.example.com on port 443 is routed to your pods running on port 8080.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: my-app-image
+        ports:
+        - containerPort: 8080
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service
+spec:
+  selector:
+    app: my-app
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+
+Use an Ingress resource to forward traffic from port 443 to the Service on port 8080.
+First, make sure you have an Ingress controller installed (e.g., Nginx Ingress Controller).
+Create an Ingress resource to handle HTTPS traffic and forward it to the Service.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  tls:
+  - hosts:
+    - my-app.example.com
+    secretName: my-app-tls
+  rules:
+  - host: my-app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-app-service
+            port:
+              number: 8080
+
+You need a TLS certificate for HTTPS. Create a Kubernetes Secret to store your TLS certificate and key.
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-app-tls
+  namespace: default
+data:
+  tls.crt: <base64 encoded certificate>
+  tls.key: <base64 encoded key>
+type: kubernetes.io/tls
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
