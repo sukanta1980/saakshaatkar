@@ -53,86 +53,56 @@ Kubernetes follows a master-slave architecture where the master node controls mu
                       +--------------+   +--------------+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Pod : The smallest and simplest Kubernetes object. A pod represents a single instance of a running process in the cluster and can contain one or more containers that share resources.
+StatefulSet Vs Stateless
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Node : A worker machine in Kubernetes, which can be either a virtual or physical machine. Each node runs pods and is managed by the control plane.
+
+StatefulSet is used for managing stateful applications that require persistent storage and unique network identities
+Stateless applications do not require persistent storage and can be scaled up or down without maintaining any state information
+for example Databases (e.g., MySQL, Cassandra)
+Unique network identities mean that each pod in a StatefulSet has a consistent and unique hostname, making it easy to address and identify individual pods
+Each pod in a StatefulSet gets a predictable and stable hostname
+The hostname follows the pattern: $(statefulset name)-$(ordinal)
+Kubernetes automatically creates DNS records for each pod in the StatefulSet using the headless service
+
+Each pod can be accessed using its unique DNS name, which follows the pattern: $(pod-name).$(service-name).$(namespace).svc.cluster.local
+mysql-0
+mysql-1
+mysql-2
+
+DNS Records:
+mysql-0.mysql.database.svc.cluster.local
+mysql-1.mysql.database.svc.cluster.local
+mysql-2.mysql.database.svc.cluster.local
+Persistent Storage: Each pod can have its own persistent storage, which is not shared with other pods
+
+Web servers (e.g., Nginx, Apache)
+Microservices
+
+In Stateless application Uses ephemeral storage, which means data is lost when the pod is deleted or restarted.
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Cluster :A set of nodes grouped together, managed by a control plane, which orchestrates the deployment, scaling, and management of containerized applications.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Namespace:logical partition within a Kubernetes cluster that provides a way to divide cluster resources between multiple users or teams, allowing for resource isolation.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Deployment:A higher-level concept that manages ReplicaSets and provides declarative updates to pods and ReplicaSets
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ReplicaSet: Ensures a specified number of pod replicas are running at any given time
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-StatefulSet:Manages stateful applications, providing stable, unique network identifiers, and persistent storage. Ensures ordered and graceful deployment and scaling.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-DaemonSet:Ensures that a copy of a pod runs on all (or some) nodes in the cluster, often used for background tasks like logging or monitoring.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Job:Creates one or more pods and ensures that a specified number of them successfully terminate. Used for batch or short-lived tasks.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-CronJob:Manages time-based jobs, running on a scheduled basis, similar to cron in Unix/Linux systems.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Service: You have a set of Pods running a web application, and you want to expose these Pods internally within the cluster or to the external world. You would create a Service to provide a stable endpoint and load balancing.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Service Account: You have a Pod that needs to interact with the Kubernetes API to list or create resources. You would create a service account with the necessary permissions and associate it with the Pod.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ConfigMap: Stores non-sensitive configuration data as key-value pairs. ConfigMaps allow you to decouple configuration artifacts from image content to keep containerized applications portable.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Secret: Stores sensitive data such as passwords, OAuth tokens, and SSH keys. Secrets are similar to ConfigMaps but are intended to hold sensitive information.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-PersistentVolume (PV): A piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using StorageClasses. PVs are a cluster resource.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-PersistentVolumeClaim (PVC): request for storage by a user. PVCs consume PersistentVolumes in the cluster and can request specific size and access modes.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-StorageClass: StorageClass is used to define different types of storage configurations that are available for dynamically provisioning PersistentVolumes (PVs)
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Kubelet: An agent that runs on each node in the cluster, ensuring that containers are running in a pod as specified. It communicates with the control plane components.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Kube-proxy: Maintains network rules on nodes. These network rules allow network communication to pods from network sessions inside or outside of the cluster.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-etcd: distributed key-value store used to store all cluster data. It is the backend for service discovery and stores the cluster's state and configuration.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Control Plane: The collection of components that manage the state of the cluster, including the API server, scheduler, controller manager, and etcd.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-API Server (kube-apiserver): The component that exposes the Kubernetes API. It is the front-end for the Kubernetes control plane.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Scheduler (kube-scheduler): Watches for newly created pods that do not have an assigned node and selects a node for them to run on based on resource availability and other constraints.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Operator: A method of packaging, deploying, and managing a Kubernetes application. Operators use custom resources to manage applications and their components.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Replica: The term "replica" refers to the number of identical copies of a pod that a Kubernetes deployment ensures are running at any given time.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Resource Quota: Limits the amount of resources (CPU, memory, storage) that a namespace can consume. It helps ensure fair resource distribution among multiple namespaces.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-LimitRange: Defines default resource limits and requests for pods and containers within a namespace, helping to manage resource usage.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Affinity and Anti-Affinity: Rules that influence pod placement on nodes. Affinity specifies preferences for co-locating pods, while anti-affinity specifies preferences for separating pods across nodes.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Taints and Tolerations: Mechanisms to control pod scheduling. Taints are applied to nodes to repel pods, while tolerations are applied to pods to allow them to schedule on nodes with matching taints.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Horizontal Pod Autoscaler (HPA): Automatically adjusts the number of pod replicas in a deployment, replication controller, or stateful set based on observed CPU utilization or other select metrics.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Vertical Pod Autoscaler (VPA): Automatically adjusts the resource limits and requests (CPU and memory) of pods to match the resource needs of the application.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-PodDisruptionBudget (PDB): Specifies the minimum number of replicas of a pod that must be up at any given time during voluntary disruptions (e.g., updates, deletions).
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-NetworkPolicy: Defines rules for how pods communicate with each other and with other network endpoints. It controls traffic flow at the IP address or port level.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ConfigMap: A Kubernetes object used to store non-sensitive configuration data as key-value pairs. ConfigMaps decouple configuration artifacts from container images to keep containerized applications portable.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Secret: A Kubernetes object that stores sensitive information, such as passwords, OAuth tokens, and SSH keys, securely.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Ingress: Kubernetes resource that manages external access to services within the cluster via HTTP/HTTPS routes.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Ingress Controller: Manages and configures Ingress rules, typically using a reverse proxy (e.g., Nginx, Traefik) to route traffic to services based on defined rules and policies.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Init Container:Containers that run before the app containers in a pod are started. They are used to set up prerequisites for the application containers.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Sidecar Container:A helper container that runs alongside the main container in a pod and provides additional functionality, such as logging or proxying.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-PodPreset:Kubernetes resource used to inject configuration data into pods at creation time, such as environment variables, volumes, and volume mounts.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is the difference between ConfigMap Vs Secretes 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ConfigMap: Stores non-sensitive configuration data
+Secret: Stores sensitive data such as passwords, tokens, and keys.
+ConfigMap: Data is stored as plain text.
+Secret: Data is base64 encoded.
+ConfigMap: Less secure, as data is not encrypted.
+Secret: More secure, with stricter access controls and encryption at rest.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Service Vs ServiceAccount
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Service: Manages network access to a set of pods. It provides load balancing and service discovery within the cluster.
+Types of Services:
+ClusterIP: Exposes the Service on a cluster-internal IP.
+NodePort: Exposes the Service on each Node's IP at a static port.
+LoadBalancer: Exposes the Service using a cloud provider's load balancer.
+ExternalName
+Service Defines how to access an application running in pods.
+
+ServiceAccounts enable pods to authenticate against the Kubernetes API. This is essential for applications running inside the cluster that need to query or modify Kubernetes resources
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Init Containers and Sidecar Containers in Kubernetes
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -190,21 +160,13 @@ spec:
 What is Control Plane in kubernetes
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-In Kubernetes, the control plane is the brain and central nervous system of the entire orchestration platform. It's responsible for making high-level decisions about the cluster, issuing commands, and ensuring the desired state of your containerized applications is maintained. Here's a breakdown of the control plane's key functionalities:
-
-Cluster Management: The control plane provisions and manages the Kubernetes cluster itself. This includes adding or removing nodes, configuring security settings, and overseeing the overall health of the cluster.
-Scheduling: When you deploy a new application (represented as pods in Kubernetes), the control plane's scheduler component takes center stage. It analyzes available resources across the cluster nodes and assigns pods to suitable nodes based on factors like resource requirements (CPU, memory), pod priorities, and any specified affinity/anti-affinity rules (e.g., placing related pods together or keeping them separate).
-Self-Healing: The control plane constantly monitors the health of your pods. If a pod becomes unhealthy or crashes, the control plane's replica set controller detects the issue and takes corrective actions. This might involve restarting the pod on the same node or scheduling a new pod on a different healthy node, ensuring your applications remain available even in case of failures.
-Service Management: The control plane plays a crucial role in exposing your containerized applications as services. It creates Kubernetes services that act as abstractions for pods, providing a stable network identity and load balancing capabilities. This allows external users or other applications within the cluster to access your services without needing to know the underlying pod details or their network addresses.
-Security: The control plane enforces security policies within the cluster. This might involve authentication and authorization mechanisms to control access to the cluster and its resources. Additionally, security policies can be defined to restrict pod behavior or network access for enhanced security.
-
-Components of the Control Plane:
-
-Kubernetes API Server: This is the central communication hub for the control plane. It exposes a RESTful API that allows users (through kubectl or other tools) and other Kubernetes components to interact with the cluster. Deployments are submitted, pod information is retrieved, and cluster configurations are managed through the API server.
-Kube-scheduler: As mentioned earlier, the scheduler is responsible for making informed decisions about where to place pods across the available nodes in the cluster.
-Kube-controller-manager: This component runs a collection of controllers that constantly work in the background to ensure the cluster state matches the desired state as specified in your deployments and service configurations. Replica set controllers, service controllers, and namespace controllers are some examples.
-etcd (Optional): While not strictly mandatory, etcd is a popular choice for storing cluster state information in a distributed key-value store. This ensures all components of the control plane have a consistent view of the cluster's current state and desired state.
-
+In Kubernetes, the control plane is the brain and central nervous system of the entire orchestration platform. 
+The Kubernetes Control Plane manages the overall cluster state, scheduling, and control tasks through a combination of the API Server, etcd, Scheduler, Controller Manager, and Cloud Controller Manager
+API Server: The central management entity that exposes the Kubernetes API.
+etcd: Stores all configuration data and the cluster state.
+Scheduler: Determines which nodes will run newly created pods based on resource requirements.
+Controller Manager: Runs various controllers to ensure the desired state of the cluster is maintained.
+Cloud Controller Manager: Manages cloud provider-specific control logic.
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 if a kubernetes pod is going to crash loopback state ,  What are the steps to debug and fix it 
@@ -246,17 +208,6 @@ metadata: Contains the name and labels for the PDB.
 spec: Defines the PDB's behavior.
 minAvailable: Ensures that at least one pod matching the selector is always available.
 selector: Identifies the pods to which this PDB applies using label selectors.
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-What is Service Account
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-In Kubernetes, a Service Account is a special type of account used by pods to authenticate to the Kubernetes API. It provides:
-
-Identity: For pods to interact with the Kubernetes API.
-Access Control: Allows fine-grained access management using Role-Based Access Control (RBAC).
-Isolation: Each pod can have its own service account, enhancing security.
-Tokens: Automatically mounted into pods for authentication.
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 What is RBAC
@@ -324,17 +275,6 @@ NodePort: Expose a service on a static port on each node's IP.
 Ingress: Manage external access using HTTP/HTTPS routes with an Ingress controller (e.g., Nginx, Traefik).
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-What is the difference between ConfigMap Vs Secretes 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-ConfigMap: Stores non-sensitive configuration data
-Secret: Stores sensitive data such as passwords, tokens, and keys.
-ConfigMap: Data is stored as plain text.
-Secret: Data is base64 encoded.
-ConfigMap: Less secure, as data is not encrypted.
-Secret: More secure, with stricter access controls and encryption at rest.
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 Please explain kubernetes PVs and PVC with an example
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -575,12 +515,83 @@ data:
 type: kubernetes.io/tls
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Pod : The smallest and simplest Kubernetes object. A pod represents a single instance of a running process in the cluster and can contain one or more containers that share resources.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Node : A worker machine in Kubernetes, which can be either a virtual or physical machine. Each node runs pods and is managed by the control plane.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Cluster :A set of nodes grouped together, managed by a control plane, which orchestrates the deployment, scaling, and management of containerized applications.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Namespace:logical partition within a Kubernetes cluster that provides a way to divide cluster resources between multiple users or teams, allowing for resource isolation.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Deployment:Deployment in Kubernetes is defined using a YAML or JSON configuration file, where we specify the desired state and configuration for the application, including ReplicaSets and other parameters
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ReplicaSet: Ensures a specified number of pod replicas are running at any given time
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+StatefulSet:StatefulSet is used for managing stateful applications that require persistent storage and unique network identities
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DaemonSet:Ensures that a copy of a pod runs on all (or some) nodes in the cluster, often used for background tasks like logging or monitoring.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Job:Creates one or more pods and ensures that a specified number of them successfully terminate. Used for batch or short-lived tasks.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+CronJob:Manages time-based jobs, running on a scheduled basis, similar to cron in Unix/Linux systems.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Service: You have a set of Pods running a web application, and you want to expose these Pods internally within the cluster or to the external world. You would create a Service to provide a stable endpoint and load balancing.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Service Account: You have a Pod that needs to interact with the Kubernetes API to list or create resources. You would create a service account with the necessary permissions and associate it with the Pod.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ConfigMap: Stores non-sensitive configuration data as key-value pairs. ConfigMaps allow you to decouple configuration artifacts from image content to keep containerized applications portable.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Secret: Stores sensitive data such as passwords, OAuth tokens, and SSH keys. Secrets are similar to ConfigMaps but are intended to hold sensitive information.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PersistentVolume (PV): A piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using StorageClasses. PVs are a cluster resource.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PersistentVolumeClaim (PVC): request for storage by a user. PVCs consume PersistentVolumes in the cluster and can request specific size and access modes.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+StorageClass: StorageClass is used to define different types of storage configurations that are available for dynamically provisioning PersistentVolumes (PVs)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Kubelet: An agent that runs on each node in the cluster, ensuring that containers are running in a pod as specified. It communicates with the control plane components.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Kube-proxy: Maintains network rules on nodes. These network rules allow network communication to pods from network sessions inside or outside of the cluster.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+etcd: distributed key-value store used to store all cluster data. It is the backend for service discovery and stores the cluster's state and configuration.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Control Plane: The collection of components that manage the state of the cluster, including the API server, scheduler, controller manager, and etcd.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+API Server (kube-apiserver): The component that exposes the Kubernetes API. It is the front-end for the Kubernetes control plane.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Scheduler (kube-scheduler): Watches for newly created pods that do not have an assigned node and selects a node for them to run on based on resource availability and other constraints.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Operator: A method of packaging, deploying, and managing a Kubernetes application. Operators use custom resources to manage applications and their components.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Replica: The term "replica" refers to the number of identical copies of a pod that a Kubernetes deployment ensures are running at any given time.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Resource Quota: Limits the amount of resources (CPU, memory, storage) that a namespace can consume. It helps ensure fair resource distribution among multiple namespaces.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+LimitRange: Defines default resource limits and requests for pods and containers within a namespace, helping to manage resource usage.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Affinity and Anti-Affinity: Rules that influence pod placement on nodes. Affinity specifies preferences for co-locating pods, while anti-affinity specifies preferences for separating pods across nodes.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Taints and Tolerations: Mechanisms to control pod scheduling. Taints are applied to nodes to repel pods, while tolerations are applied to pods to allow them to schedule on nodes with matching taints.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Horizontal Pod Autoscaler (HPA): Automatically adjusts the number of pod replicas in a deployment, replication controller, or stateful set based on observed CPU utilization or other select metrics.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Vertical Pod Autoscaler (VPA): Automatically adjusts the resource limits and requests (CPU and memory) of pods to match the resource needs of the application.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PodDisruptionBudget (PDB): Specifies the minimum number of replicas of a pod that must be up at any given time during voluntary disruptions (e.g., updates, deletions).
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+NetworkPolicy: Defines rules for how pods communicate with each other and with other network endpoints. It controls traffic flow at the IP address or port level.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ConfigMap: A Kubernetes object used to store non-sensitive configuration data as key-value pairs. ConfigMaps decouple configuration artifacts from container images to keep containerized applications portable.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Secret: A Kubernetes object that stores sensitive information, such as passwords, OAuth tokens, and SSH keys, securely.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Ingress: Kubernetes resource that manages external access to services within the cluster via HTTP/HTTPS routes.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Ingress Controller: Manages and configures Ingress rules, typically using a reverse proxy (e.g., Nginx, Traefik) to route traffic to services based on defined rules and policies.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Init Container:Containers that run before the app containers in a pod are started. They are used to set up prerequisites for the application containers.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Sidecar Container:A helper container that runs alongside the main container in a pod and provides additional functionality, such as logging or proxying.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PodPreset:Kubernetes resource used to inject configuration data into pods at creation time, such as environment variables, volumes, and volume mounts.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
