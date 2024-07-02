@@ -1,8 +1,33 @@
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Some basic git commands
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+git fetch : Fetch updates from the remote repository
+git fetch origin master : Fetch updates from the remote master branch
+git merge FETCH_HEAD : Merge the fetched updates into your current branch
+git stage <file> : Stage changes in your working directory
+git pull : Pull changes from the remote repository and merge them 
+git clone <repository_url>
+git branch          # List all branches
+git branch <branch> # Create a new branch
+git checkout <branch>    # Switch to the specified branch
+git checkout -b <branch> # Create and switch to a new branch
+git merge <branch> : Merges a branch into the current branch.
+git rebase <branch> : Reapplies commits on top of another base tip
+git log : Shows the commit history
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is the difference between git clone and git checkout
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+git clone https://github.com/user/repository.git
+cd repository
+
+git checkout -b feature-branch  # Create and switch to a new branch
+git checkout master 
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
 What is the difference between git fetch and git pull
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 git fetch downloads commits, files, and refs from a remote repository into your local repository, but it does not modify your working directory or current branch.
-
 git pull is a combination of git fetch followed by git merge. It fetches changes from a remote repository and then merges them into your current branch.
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -17,6 +42,26 @@ Push the resolved changes to the remote repository : git push
 Check the status to ensure everything is clean : git status
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+What is git rebase 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+git rebase is a powerful Git command used to apply changes from one branch onto another
+
+main:      A --- B --- C
+                \
+feature:         D --- E
+
+Here, A, B, and C are commits on the main branch, and D and E are commits on the feature branch.
+Rebase the feature branch onto the main branch so that the commit history looks like this:
+
+main:      A --- B --- C
+                          \
+feature:                   D' --- E'
+
+git checkout feature
+git rebase main
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
 How do you revert a commit in Git?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -99,8 +144,3 @@ how to push a perticular commit
 git push origin <commit-hash>:<branch-name>
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------------------------------------------------

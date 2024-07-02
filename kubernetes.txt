@@ -1,3 +1,56 @@
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Kubernetes Architecture
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Kubernetes follows a master-slave architecture where the master node controls multiple worker nodes that run containerized applications.
+
+1. Master Node:
+   - API Server: Frontend for Kubernetes, exposes the Kubernetes API.
+   - Scheduler: Assigns nodes for newly created pods.
+   - Controller Manager: Monitors cluster state and reconciles desired state.
+   - etcd: Consistent and highly available key-value store for cluster data.
+
+2. Worker Nodes:
+   - Kubelet: Agent that runs on each node and manages the node and its containers.
+   - Kube Proxy: Network proxy that reflects services as defined in the Kubernetes API.
+   - Container Runtime: Software responsible for running containers (e.g., Docker, containerd).
+
+3. Pods:
+   - Smallest deployable units in Kubernetes, consisting of one or more containers.
+
+
+                                +--------------------------+
+                                |        API Server         |
+                                +--------------------------+
+                                         |
+                                         v
+                                +--------------------------+
+                                |      Scheduler           |
+                                +--------------------------+
+                                         |
+                                         v
+                               +--------------------------+
+                               | Controller Manager       |
+                               +--------------------------+
+                                         |
+                                         v
+                                    etcd (KV store)
+                                         |
+                                         v
+                                  +-----------+
+                                  | Master    |
+                                  | Node      |
+                                  +-----------+
+                                  /          \
+                                 /            \
+                                v              v
+                      +--------------+   +--------------+
+                      | Worker Node  |   | Worker Node  |
+                      | (Kubelet)    |   | (Kubelet)    |
+                      +--------------+   +--------------+
+                      |  Container   |   |  Container   |
+                      |  Runtime     |   |  Runtime     |
+                      +--------------+   +--------------+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Pod : The smallest and simplest Kubernetes object. A pod represents a single instance of a running process in the cluster and can contain one or more containers that share resources.
