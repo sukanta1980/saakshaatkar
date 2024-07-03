@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------------------------------------------------
+EBS vs EFS 
+------------------------------------------------------------------------------------------------------------------
+EBS provides block-level storage volumes that can be attached to EC2 instances.
+It is typically used for storing data that requires low-latency access and is frequently accessed by a single EC2 instance.
+EBS volumes can be resized and support snapshots for backup and disaster recovery.
+
+EFS provides scalable file storage that can be shared across multiple EC2 instances and Kubernetes pods.
+It is suitable for scenarios where multiple EC2 instances or containers need to access the same data concurrently.
+EFS automatically scales storage capacity up or down as files are added or removed, and it can grow to petabyte-scale.
+
+------------------------------------------------------------------------------------------------------------------
 What is ECS, ECR, AKS in aws 
 ------------------------------------------------------------------------------------------------------------------
 ECS is for managing Docker containers directly on AWS, providing container orchestration capabilities.

@@ -53,6 +53,42 @@ Kubernetes follows a master-slave architecture where the master node controls mu
                       +--------------+   +--------------+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Node Affinity , Node Anti Affinity, Taints and Tolerations 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: zone
+          operator: In
+          values:
+          - us-east-1a
+          - us-east-1b
+This deployment ensures that pods of the frontend application are scheduled only on nodes labeled with zone=us-east-1a or zone=us-east-1b.
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - database
+      topologyKey: kubernetes.io/hostname
+This deployment ensures that no more than one pod of the database application is scheduled on each node, based on the hostname topology key.
+
+tolerations:
+- key: "dedicated"
+  operator: "Equal"
+  value: "database"
+  effect: "NoSchedule"
+kubectl taint nodes node1 dedicated=database:NoSchedule
+The pod database-pod tolerates nodes with the taint dedicated=database:NoSchedule, allowing it to be scheduled on nodes with this taint
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 StatefulSet Vs Stateless
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -513,6 +549,16 @@ data:
   tls.crt: <base64 encoded certificate>
   tls.key: <base64 encoded key>
 type: kubernetes.io/tls
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+In kubernets how it make sure all my pods are distributed in all the zones in aws
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Node Groups: You configure node groups to span multiple availability zones (AZs).
+Scheduler: Kubernetes' scheduler places pods on nodes based on resource needs and rules you set.
+Topology Spread Constraints: Optionally used to evenly spread pods across AZs.
+AWS Integration: Kubernetes interacts with AWS to manage nodes across AZs and AWS-specific resources.
+By setting up your Kubernetes cluster with node groups across AZs and optionally using topology spread constraints, you ensure your pods are distributed for high availability and fault tolerance in AWS
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Pod : The smallest and simplest Kubernetes object. A pod represents a single instance of a running process in the cluster and can contain one or more containers that share resources.
