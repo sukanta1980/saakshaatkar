@@ -1,4 +1,100 @@
 ------------------------------------------------------------------------------------------------------------------
+Explain the TCP three-way handshake process.
+------------------------------------------------------------------------------------------------------------------
+The client sends a SYN (synchronize) packet to the server to initiate a connection.
+The server responds with a SYN-ACK (synchronize-acknowledge) packet to acknowledge the client's request.
+The client sends an ACK (acknowledge) packet back to the server, confirming the connection is established.
+------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------
+What are the differences between TCP and UDP?
+------------------------------------------------------------------------------------------------------------------
+TCP (Transmission Control Protocol) is connection-oriented, reliable, and ensures data is delivered in order. It includes error checking, flow control, and congestion control. UDP (User Datagram Protocol) is connectionless, does not guarantee delivery, and is faster and more efficient for certain applications that do not require reliable delivery (e.g., video streaming, online gaming).
+------------------------------------------------------------------------------------------------------------------
+
+What is a TCP/IP stack, and what layers does it consist of?
+------------------------------------------------------------------------------------------------------------------
+The TCP/IP stack is a set of networking protocols organized into layers, each responsible for specific functions
+Application Layer : Handles high-level protocols, data representation, and encoding (e.g., HTTP, FTP, SMTP).
+Transport Layer : Manages end-to-end communication and data transfer reliability (e.g., TCP, UDP).
+Internet Layer : Handles logical addressing, routing, and packet forwarding (e.g., IP).
+Network Access Layer : Deals with hardware addressing and physical transmission of data (e.g., Ethernet, Wi-Fi).
+------------------------------------------------------------------------------------------------------------------
+
+What is an AWS VPC, and why is it used?
+------------------------------------------------------------------------------------------------------------------
+An AWS VPC (Virtual Private Cloud) is a virtual network dedicated to your AWS account. It allows you to launch AWS resources in a logically isolated section of the AWS cloud. VPCs are used to provide network isolation, enhance security, and allow for customization of network configurations.
+------------------------------------------------------------------------------------------------------------------
+
+How do you secure a VPC?
+------------------------------------------------------------------------------------------------------------------
+Security Groups :  Act as virtual firewalls for your instances to control inbound and outbound traffic.
+Network ACLs (Access Control Lists) : Provide an additional layer of security at the subnet level by controlling traffic to and from subnets.
+VPN Connections : Enable secure connections between your on-premises network and your VPC.
+Flow Logs : Capture and monitor network traffic in your VPC.
+------------------------------------------------------------------------------------------------------------------
+
+What is the difference between a public subnet and a private subnet in a VPC?
+------------------------------------------------------------------------------------------------------------------
+A public subnet is a subnet with a route to an internet gateway, allowing instances in the subnet to communicate directly with the internet. A private subnet does not have a route to an internet gateway and is used for instances that do not need direct internet access.
+------------------------------------------------------------------------------------------------------------------
+
+What is the purpose of subnets in a VPC?
+------------------------------------------------------------------------------------------------------------------
+Subnets are used to partition a VPC's IP address range into smaller segments. This allows you to organize and isolate resources based on security, operational, and cost management requirements. Subnets also enable the deployment of resources across multiple availability zones for high availability.
+------------------------------------------------------------------------------------------------------------------
+
+What is the role of a route table in a VPC?
+------------------------------------------------------------------------------------------------------------------
+A route table contains a set of rules (routes) that determine how traffic is directed within the VPC. Each subnet is associated with a route table that controls the outbound and inbound traffic flow. Route tables enable communication between subnets, VPCs, and external networks.
+------------------------------------------------------------------------------------------------------------------
+
+What are the different types of load balancers available in AWS?
+------------------------------------------------------------------------------------------------------------------
+Application Load Balancer (ALB): Operates at the application layer (Layer 7) and is ideal for HTTP/HTTPS traffic.
+Network Load Balancer (NLB): Operates at the transport layer (Layer 4) and is designed for high performance, low latency, and TCP/UDP traffic.
+Classic Load Balancer (CLB): Operates at both the application and transport layers and supports HTTP, HTTPS, and TCP traffic. It is being phased out in favor of ALB and NLB.
+------------------------------------------------------------------------------------------------------------------
+
+How does an Application Load Balancer (ALB) work?
+------------------------------------------------------------------------------------------------------------------
+An ALB distributes incoming application traffic across multiple targets, such as EC2 instances, containers, and IP addresses, in multiple Availability Zones. It provides advanced routing capabilities, including path-based and host-based routing, SSL termination, and WebSocket support. ALB also integrates with AWS WAF for additional security.
+------------------------------------------------------------------------------------------------------------------
+
+What is the difference between an Application Load Balancer (ALB) and a Network Load Balancer (NLB)?
+------------------------------------------------------------------------------------------------------------------
+An ALB operates at the application layer (Layer 7) and is used for HTTP/HTTPS traffic, providing advanced routing features like content-based routing and SSL termination. An NLB operates at the transport layer (Layer 4) and is designed for handling TCP/UDP traffic with high performance, low latency, and connection stability. NLB is suitable for applications requiring extreme performance and low latency, such as real-time gaming and financial applications.
+------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------
+What is SSl and how does it works 
+------------------------------------------------------------------------------------------------------------------
+
+SSL (Secure Sockets Layer) is a standard security technology for establishing an encrypted link between a server and a client, typically a web server (website) and a browser, or a mail server and a mail client. 
+SSL ensures that all data transmitted between the web server and browser remains encrypted and thus private 
+
+------------------------------------------------------------------------------------------------------------------
+TLS 
+------------------------------------------------------------------------------------------------------------------
+TLS is a more secure and efficient protocol compared to SSL, addressing many of the vulnerabilities and limitations of SSL. 
+Handshake : The client and server exchange information to agree on encryption methods and verify identities.
+Authentication : The server sends its digital certificate to the client for verification.
+Encryption : The client and server generate a shared secret key.
+Secure Communication : The shared key encrypts the data, ensuring secure transmission between the client and server.
+------------------------------------------------------------------------------------------------------------------
+When we type www.google.com in the browser what happen in the background
+------------------------------------------------------------------------------------------------------------------
+
+The first step is DNS Resolution : also known as Domain Name System resolution, is the process of translating a human-friendly domain name (like www.google.com) into an IP address (like 172.217.12.206) that computers use to identify each other on the network
+Browser Cache : The browser checks its cache to see if it has recently resolved www.google.com to an IP address.
+Operating System Cache: If not found, the browser asks the operating system to resolve the address.
+Router Cache: If the OS doesn't have it cached, it queries the local router, which might have a cached result.
+ISP DNS Server: If the local router doesn't know, it queries the DNS server configured for your network, usually provided by your ISP.
+Recursive DNS Resolution: If the ISP's DNS server doesn't know, it performs recursive queries, starting from the root DNS servers, then the TLD (Top Level Domain) servers, and finally the authoritative DNS servers for google.com.
+
+The browser initiates a TCP connection to the resolved IP address of Google’s servers on port 80 (HTTP) or 443 (HTTPS) by sending a SYN packet.
+If the connection is HTTPS, the browser initiates a TLS handshake by sending a Client Hello message.
+------------------------------------------------------------------------------------------------------------------
 EBS vs EFS 
 ------------------------------------------------------------------------------------------------------------------
 EBS provides block-level storage volumes that can be attached to EC2 instances.
@@ -10,12 +106,12 @@ It is suitable for scenarios where multiple EC2 instances or containers need to 
 EFS automatically scales storage capacity up or down as files are added or removed, and it can grow to petabyte-scale.
 
 ------------------------------------------------------------------------------------------------------------------
-What is ECS, ECR, AKS in aws 
+What is ECS, ECR, EKS, AKS 
 ------------------------------------------------------------------------------------------------------------------
-ECS is for managing Docker containers directly on AWS, providing container orchestration capabilities.
-ECR is for storing and managing Docker container images securely on AWS, with seamless integration with ECS.
-EKS is for running Kubernetes clusters on AWS, simplifying the management of containerized applications using Kubernetes orchestration.
-
+ECS(Elastic Container Service) is for managing Docker containers directly on AWS, providing container orchestration capabilities.
+ECR(Elastic Container Registry) is for storing and managing Docker container images securely on AWS, with seamless integration with ECS.
+EKS(Elastic Kubernetes Service) is for running Kubernetes clusters on AWS, simplifying the management of containerized applications using Kubernetes orchestration.
+AKS (Azure Kubernetes Service) is a managed Kubernetes service provided by Microsoft Azure
 ------------------------------------------------------------------------------------------------------------------
 VPC: A logically isolated section of the AWS cloud.
 Subnets: Divisions within a VPC to place resources in public or private environments.
@@ -25,26 +121,19 @@ VPC Endpoint: Allows private connections to AWS services without requiring inter
 ------------------------------------------------------------------------------------------------------------------
 When you create vpc what are things automatically created and what are the things we need to add to make it work
 ------------------------------------------------------------------------------------------------------------------
-Automatically Created Components
-
 Route Table: A main route table is automatically created and associated with the VPC.
 Network Access Control List (NACL): A default network ACL is created and associated with the VPC, allowing all inbound and outbound traffic by default.
-
-Components that we Need to Add
 
 Subnets: At least one subnet (either public or private) in each Availability Zone where you want to deploy resources.
 Internet Gateway: If you want your VPC to have public access to the internet, you need to create and attach an Internet Gateway.
 Route Tables and Routes: Create custom route tables as needed.
-NAT Gateway or NAT Instance: For private subnets that need access to the internet, create a NAT Gateway or NAT Instance and update the route tables accordingly.
+NAT Gateway : For private subnets that need access to the internet, create a NAT Gateway and update the route tables accordingly.
 Security Groups: Define security groups to control inbound and outbound traffic to your resources.
 Elastic IP Addresses: Allocate Elastic IP addresses if you need fixed public IPs for your resources (e.g., NAT Gateway or EC2 instances).
-
+Bashton Host Or Jump Box
 ------------------------------------------------------------------------------------------------------------------
 In which case we can say that load balancer itself not working even though health check prob is fine
 ------------------------------------------------------------------------------------------------------------------
-
-A load balancer might not be working even though the health check probe is fine if:
-
 Incorrect routing rules or target groups.
 Network connectivity issues between the load balancer and backend servers.
 Security groups or firewall rules blocking traffic.
@@ -53,16 +142,6 @@ SSL Certificate Expired: The health check uses HTTP, but users access the applic
 Firewall Rule Misconfiguration: Health check traffic is allowed through the firewall, but actual user traffic is blocked by a new rule.
 
 ------------------------------------------------------------------------------------------------------------------
-What is nat gateway and vpc endpoint 
-------------------------------------------------------------------------------------------------------------------
-
-Nat gateway Allows instances in a private subnet to access the internet while keeping them secure from inbound traffic from the internet.
-Typically used in AWS VPCs to enable internet access for private instances without exposing them directly to the internet.
-
-VPC Endpoint Enables secure, private connectivity between VPCs and AWS services without using the internet.
-Used to connect VPCs directly to AWS services like S3 or DynamoDB over the AWS network.
-------------------------------------------------------------------------------------------------------------------
-
 What is cloud formation 
 ------------------------------------------------------------------------------------------------------------------
 

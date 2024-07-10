@@ -1,4 +1,8 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is Elasticsearch Full-Text Search
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Elasticsearch is a powerful search engine based on the Lucene library. It provides full-text search capabilities, which means it can search through large amounts of text data quickly and efficiently. Full-text search in Elasticsearch involves indexing text data and querying it in a way that accounts for the content and structure of the text.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
 A sample cluster configuration , elasticsearch.yml
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 cluster.name: payment

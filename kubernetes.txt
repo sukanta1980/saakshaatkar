@@ -1,7 +1,17 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+In kubernets how it make sure all my pods are distributed in all the zones in aws
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+If we do not explicitly configure topology spread constraints in our Kubernetes deployment, the default mechanism Kubernetes uses to distribute pods is based on its default scheduling policies. 
+How Pods are Distributed
+Resource Fit : The scheduler looks for nodes that have enough available resources (CPU, memory) to accommodate the pod’s requests.
+Node Affinity and Anti-Affinity : By default, Kubernetes tries to spread pods across nodes to avoid overloading a single node. This is part of the default bin-packing strategy.
+Node Conditions and Taints : Nodes with certain conditions or taints that make them unsuitable for the pod will be avoided.
+Balanced Distribution : Kubernetes attempts to distribute pods evenly across nodes to balance the load and avoid resource contention.
+
+Topology Spread Constraints is a feature in Kubernetes that ensures pods are evenly distributed across different topology domains (e.g., zones, nodes) to enhance availability and fault tolerance.
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Kubernetes Architecture
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 Kubernetes follows a master-slave architecture where the master node controls multiple worker nodes that run containerized applications.
 
 1. Master Node:
@@ -53,6 +63,28 @@ Kubernetes follows a master-slave architecture where the master node controls mu
                       +--------------+   +--------------+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Kubernetes Horizontal Pod Autoscaler (HPA)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The Kubernetes Horizontal Pod Autoscaler (HPA) automatically scales the number of pods in a deployment, replica set, or stateful set based on observed CPU utilization (or other select metrics). It helps maintain the performance of applications by adjusting the number of running pods in response to workload changes.
+
+How HPA Works
+Metrics Collection : HPA periodically checks the resource usage (e.g., CPU, memory) of the pods.
+Scaling Decision : Based on the defined thresholds (e.g., target CPU utilization), HPA decides whether to scale up or down.
+Scaling Action : If the current metrics exceed the thresholds, HPA increases the number of pods. If the metrics are below the thresholds, it decreases the number of pods.
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: my-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: my-app
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Node Affinity , Node Anti Affinity, Taints and Tolerations 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -89,31 +121,22 @@ kubectl taint nodes node1 dedicated=database:NoSchedule
 The pod database-pod tolerates nodes with the taint dedicated=database:NoSchedule, allowing it to be scheduled on nodes with this taint
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-StatefulSet Vs Stateless
+Deployment Vs StatefulSet Vs Stateless
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-StatefulSet is used for managing stateful applications that require persistent storage and unique network identities
-Stateless applications do not require persistent storage and can be scaled up or down without maintaining any state information
-for example Databases (e.g., MySQL, Cassandra)
-Unique network identities mean that each pod in a StatefulSet has a consistent and unique hostname, making it easy to address and identify individual pods
-Each pod in a StatefulSet gets a predictable and stable hostname
-The hostname follows the pattern: $(statefulset name)-$(ordinal)
-Kubernetes automatically creates DNS records for each pod in the StatefulSet using the headless service
-
+Deployment: Manages stateless applications with rolling updates and rollbacks.
+ReplicaSet: Ensures a specified number of pod replicas are running.
+StatefulSet: Manages stateful applications with ordered and unique pod identities.
 Each pod can be accessed using its unique DNS name, which follows the pattern: $(pod-name).$(service-name).$(namespace).svc.cluster.local
 mysql-0
 mysql-1
-mysql-2
 
 DNS Records:
 mysql-0.mysql.database.svc.cluster.local
 mysql-1.mysql.database.svc.cluster.local
-mysql-2.mysql.database.svc.cluster.local
 Persistent Storage: Each pod can have its own persistent storage, which is not shared with other pods
 
-Web servers (e.g., Nginx, Apache)
-Microservices
-
+Stateless applications do not require persistent storage and can be scaled up or down without maintaining any state information
+for example Web servers (e.g., Nginx, Apache), Microservices
 In Stateless application Uses ephemeral storage, which means data is lost when the pod is deleted or restarted.
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 What is the difference between ConfigMap Vs Secretes 
@@ -549,16 +572,6 @@ data:
   tls.crt: <base64 encoded certificate>
   tls.key: <base64 encoded key>
 type: kubernetes.io/tls
-
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-In kubernets how it make sure all my pods are distributed in all the zones in aws
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-Node Groups: You configure node groups to span multiple availability zones (AZs).
-Scheduler: Kubernetes' scheduler places pods on nodes based on resource needs and rules you set.
-Topology Spread Constraints: Optionally used to evenly spread pods across AZs.
-AWS Integration: Kubernetes interacts with AWS to manage nodes across AZs and AWS-specific resources.
-By setting up your Kubernetes cluster with node groups across AZs and optionally using topology spread constraints, you ensure your pods are distributed for high availability and fault tolerance in AWS
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Pod : The smallest and simplest Kubernetes object. A pod represents a single instance of a running process in the cluster and can contain one or more containers that share resources.
