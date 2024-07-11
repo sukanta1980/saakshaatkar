@@ -1,4 +1,95 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Please explain each and every steps Whenever a document is indexed, updated, or deleted
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Index Request: When a document is sent for indexing, the request first hits the primary shard of the index.
+Transaction Log: Elasticsearch writes the document to the transaction log (translog) for durability. The translog ensures that even if a node crashes before the document is committed to the index, the document can be recovered.
+In-Memory Segment: The document is indexed into an in-memory data structure called a segment. Segments are write-once, meaning once data is written to them, it cannot be changed
+Refresh: Periodically (by default, every second), Elasticsearch performs a refresh. This process makes the documents in the in-memory segments visible to search. During refresh, the in-memory segments are written to a new segment on disk, and the search index is updated to include the new segments
+Flush: Flush happens less frequently and is responsible for creating a new commit point. During a flush, Elasticsearch writes all in-memory segments to disk, creates a new segment, and clears the translog. This reduces the size of the translog and frees up memory.
+Commit Point: A commit point is created during a flush. It is a point in time when all changes have been safely written to disk. If a node restarts, it can recover from the last commit point.
+Trim the Transaction Log: After a successful flush, the transaction log is trimmed because its contents are now safely stored in the segment files on disk.
+Searchable Index: The document becomes searchable after the refresh.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What are the steps internally done when updating a document
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Client Request: The client sends an update request to an Elasticsearch node.
+Routing: The node determines the primary shard responsible for the document.
+Fetch Document: The primary shard fetches the current document version.
+Apply Update: The update is applied, and the document version is incremented.
+Write to Translog: The update is written to the translog for durability.
+Update Inverted Index: The in-memory index structures are updated.
+Replication: The update is sent to replica shards, which follow similar steps.
+Acknowledgement: Once replicas confirm the update, the primary shard responds to the client.
+Refresh (if requested): The index is refreshed to make the document searchable immediately.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is inverted index
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+An inverted index is a fundamental data structure used by search engines. It allows for quick retrieval of documents containing specific terms.
+When a document is indexed in Elasticsearch:
+Analyzers Convert raw text into tokens, Analyzers composed of character filters, tokenizers, and token filters.
+Tokenizers: Break text into tokens using different methods (e.g., standard, whitespace, keyword).
+Character Filters: Preprocess the text before tokenization (e.g., HTML stripping).
+Token Filters: Modify tokens after tokenization (e.g., lowercase conversion, ASCII folding).
+
+POST _analyze 
+{
+  "text" : "How are you, This is Sukanta From Kolkata , Today Is ver very hot"
+  , "char_filter": []
+  , "tokenizer": "standard"
+  , "filter": ["uppercase"]
+}
+
+The structure of an inverted index consists of:
+Dictionary: A list of all unique terms in the dataset.
+Postings List: For each term in the dictionary, there is a postings list that records the documents in which the term appears and, optionally, the positions of the term within each document.
+
+Document 1: "Elasticsearch is a powerful search engine."
+Document 2: "A search engine is essential for full-text search."
+After analysis and tokenization, the terms might be:
+
+Document 1: ["elasticsearch", "is", "a", "powerful", "search", "engine"]
+Document 2: ["a", "search", "engine", "is", "essential", "for", "full-text", "search"]
+The inverted index would look like this:
+
+"elasticsearch" -> [1]
+"is" -> [1, 2]
+"a" -> [1, 2]
+"powerful" -> [1]
+"search" -> [1, 2]
+"engine" -> [1, 2]
+"essential" -> [2]
+"for" -> [2]
+"full-text" -> [2]
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Elasticsearch routing 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Elasticsearch uses the Murmur3 hashing function to calculate the hash value of the routing key (or document ID if no custom routing is provided).
+The hash value is then used with the modulus operation to determine the shard number:
+shard = hash % number_of_primary_shards
+
+Lets say hash value of a document ID 1 is 90fb3fe5 and no of primary shard is 5 , then 
+shard = 90fb3fe5 % 5 = 2
+The value of 90fb3fe5 % 5 is 2. 
+This means that if 90fb3fe5 were used as a hash value for routing in Elasticsearch, the document would be assigned to shard number 2. ​​
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What Elasticsearch, a bootstrap check
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+In Elasticsearch, a bootstrap check is a set of pre-flight checks that are performed when a node starts up.
+
+1. Memory Lock: Ensures that the JVM is configured to lock memory to prevent swapping, bootstrap.memory_lock: true
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Memory Pages: Modern operating systems manage memory in fixed-size blocks called pages (typically 4 KB in size). When a JVM heap is allocated, it is divided into multiple pages.
+Full Heap Scan: During a major GC, the garbage collector scans and processes the entire heap to identify and collect all the objects that are no longer in use.
+Touching Every Page: When we say the GC "touches every page of the heap," it means that the GC process reads from and possibly writes to each page of memory that has been allocated to the heap.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+2. File Descriptors: Elasticsearch uses a mmapfs directory by default to store its indices. The default operating system limits on mmap counts is likely to be too low, which may result in out of memory exceptions, increase ulimit
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Memory-mapped files allow applications to map files directly into the address space of the process. This means that parts of the file are loaded into memory as needed and can be accessed directly by the application
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+3. virtual memory : Ensures the system is configured with sufficient virtual memory.vm.max_map_count should be at least 262144.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+4. Heap Size: Ensures that the JVM heap size is appropriately configured.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
 What is Elasticsearch Full-Text Search
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Elasticsearch is a powerful search engine based on the Lucene library. It provides full-text search capabilities, which means it can search through large amounts of text data quickly and efficiently. Full-text search in Elasticsearch involves indexing text data and querying it in a way that accounts for the content and structure of the text.
@@ -147,17 +238,33 @@ GET /books/_search
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 What is doc_values in Elasticsearch 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+doc_values enhance Elasticsearch’s performance and scalability by providing an efficient mechanism for sorting and aggregations, while minimizing memory usage
+By default, doc_values are enabled for most field types.
+We can explicitly enable or disable doc_values in the field mapping:
+{
+  "mappings": {
+    "properties": {
+      "my_field": {
+        "type": "keyword",
+        "doc_values": true
+      }
+    }
+  }
+}
+On-Disk Columnar Storage: doc_values store the values of a field in a columnar format on disk, which is optimized for read operations.
+Memory-Efficient: They are stored outside of the inverted index, reducing memory usage by not keeping the entire field value in heap memory
+Columnar Format: Instead of storing data row-by-row, as in traditional row-oriented databases, columnar storage organizes data by columns. Each column's values are stored contiguously on disk
 
-doc_values store field values in a columnar format, meaning that all values for a particular field across all documents are stored together
-Document 1: {"username": "alice", "age": 30}
-Document 2: {"username": "bob", "age": 25}
-Document 3: {"username": "carol", "age": 35}
-Elasticsearch serializes and writes these columns to disk in a format optimized for quick read access. Here's a conceptual representation:
+Row-Oriented Storage:
+Row 1: Name: Alice, Age: 30, Salary: 100000
+Row 2: Name: Bob, Age: 25, Salary: 90000
+Row 3: Name: Charlie, Age: 35, Salary: 120000
 
-username column stored in doc_values:
-[ "alice", "bob", "carol" ]
-Age
-[ 30, 25, 35 ]
+Columnar Storage:
+Name Column: Alice, Bob, Charlie
+Age Column: 30, 25, 35
+Salary Column: 100000, 90000, 120000
+When a query requests the average Salary, the columnar storage can directly access the Salary column without reading through the Name and Age data, making the operation much faster and more efficient.
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 What is ElasticSearch Mapping, please explain with an example
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -218,7 +325,27 @@ GET /my_index/_search
     }
   }
 }
-
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Explain Transaction Log in Elasticsearch
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The transaction log (also known as the translog) in Elasticsearch is a crucial component for ensuring data durability and consistency. 
+It records every operation that modifies the data in an index, such as document indexing, updating, and deletion, before the changes are written to the actual index on disk.
+Transaction Log Ensures that all operations are not lost in case of a node failure.
+It Helps in recovering an index to its latest state during a restart or after a failure.
+It Allows Elasticsearch to confirm an operation's success without immediately writing it to the disk-backed index, reducing I/O operations and enhancing performance.
+Each operation that modifies an index is first recorded in the transaction log.
+Periodically, Elasticsearch flushes these operations from the transaction log to the actual index on disk.
+If Elasticsearch restarts, it replays the operations from the transaction log to bring the index back to its most recent state.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Please explain Trim the Transaction Log
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Trimming the transaction log up to the last committed operation helps manage disk space and improve efficiency by removing operations that have already been safely written to the index segments on disk. This ensures that Elasticsearch can recover quickly and efficiently from any failures, with minimal data loss and reduced resource usage.
+The translog can grow very large if it includes all operations since the last index segment flush. Trimming helps to manage disk space usage.
+Efficiency: Smaller translog files mean faster recovery times and less I/O overhead
+Operations Logged: Every index, update, or delete operation is written to both the in-memory buffer and the translog.
+Periodic Flushing: Periodically, Elasticsearch flushes the in-memory buffer to disk, creating new index segments.
+Commit Point: The point in the translog up to which all operations have been safely written to the index segments is called the commit point.
+Trimming: After a flush, Elasticsearch can safely trim (remove) the translog entries up to the commit point because those operations are now durable and stored in the index segments
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 What is the Purpose of the "Refresh" Operation And Transaction log in Elasticsearch?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -228,7 +355,19 @@ Whenever a document is indexed, updated, or deleted, the operation is first writ
 Alongside writing to the transaction log, the operation is also written to an in-memory buffer for quick access.
 Periodically, Elasticsearch creates commits or do refresh , points where the in-memory buffer is flushed to disk, creating new segment files. These operations ensure that data is searchable.
 After each write operation, Elasticsearch synchronizes the transaction log to disk, ensuring that the operation is safely stored.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Please explain Refresh Vs Flush
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+          +----------------+            +-------------------+
+          | Refresh        |            | Flush             |
+          +----------------+            +-------------------+
+          |  - Creates new |            |  - Writes buffer  |
+          |    segments    |            |    to disk        |
+          |  - Makes docs  |            |  - Trims translog |
+          |    searchable  |            |  - Ensures data   |
+          |                |            |    durability     |
+          +----------------+            +-------------------+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Please explain aggregation in ElasticSearch with an example
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -272,86 +411,15 @@ GET /sales/_search
 Why elasticsearch is not used for transaction database
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Elasticsearch is not typically used as a transactional database due to several key limitations and design choices that make it unsuitable for workloads requiring strict transactional guarantees. Here are the primary reasons:
-
+Elasticsearch is not typically used as a transactional database due to several limitations and design choices that make it unsuitable for workloads requiring strict transactional guarantees. 
 Lack of ACID Compliance
 Elasticsearch does not support multi-document transactions, meaning you cannot ensure that a series of changes to different documents are committed atomically
 While Elasticsearch is optimized for search and retrieval, indexing can be resource-intensive and may introduce latency. In a transactional system where high throughput of writes and low latency is critical, this can become a bottleneck.
-
+What is ACID Compliance
 Atomicity: Ensures that all operations within the bulk request are executed together.
 Consistency : The system must remain in a consistent state before and after the transaction.
 Isolation: Concurrent transactions must not interfere with each other.
 Durability: Once a transaction is committed, it must not be lost, even in in system crash.
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-What are the steps internally done when updating a document
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-Client Request: The client sends an update request to an Elasticsearch node.
-Routing: The node determines the primary shard responsible for the document.
-Fetch Document: The primary shard fetches the current document version.
-Apply Update: The update is applied, and the document version is incremented.
-Write to Translog: The update is written to the translog for durability.
-Update Inverted Index: The in-memory index structures are updated.
-Replication: The update is sent to replica shards, which follow similar steps.
-Acknowledgement: Once replicas confirm the update, the primary shard responds to the client.
-Refresh (if requested): The index is refreshed to make the document searchable immediately.
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-An inverted index is a fundamental data structure used by search engines. It allows for quick retrieval of documents containing specific terms.
-
-When a document is indexed in Elasticsearch:
-Analyzers Convert raw text into tokens, Analyzers composed of character filters, tokenizers, and token filters.
-Tokenizers: Break text into tokens using different methods (e.g., standard, whitespace, keyword).
-Character Filters: Preprocess the text before tokenization (e.g., HTML stripping).
-Token Filters: Modify tokens after tokenization (e.g., lowercase conversion, ASCII folding).
-
-POST _analyze 
-{
-  "text" : "How are you, This is Sukanta From Kolkata , Today Is ver very hot"
-  , "char_filter": []
-  , "tokenizer": "standard"
-  , "filter": ["uppercase"]
-}
-
-The structure of an inverted index consists of:
-Dictionary: A list of all unique terms in the dataset.
-Postings List: For each term in the dictionary, there is a postings list that records the documents in which the term appears and, optionally, the positions of the term within each document.
-
-Document 1: "Elasticsearch is a powerful search engine."
-Document 2: "A search engine is essential for full-text search."
-After analysis and tokenization, the terms might be:
-
-Document 1: ["elasticsearch", "is", "a", "powerful", "search", "engine"]
-Document 2: ["a", "search", "engine", "is", "essential", "for", "full-text", "search"]
-The inverted index would look like this:
-
-"elasticsearch" -> [1]
-"is" -> [1, 2]
-"a" -> [1, 2]
-"powerful" -> [1]
-"search" -> [1, 2]
-"engine" -> [1, 2]
-"essential" -> [2]
-"for" -> [2]
-"full-text" -> [2]
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-In Elasticsearch, a bootstrap check is a set of pre-flight checks that are performed when a node starts up.
-
-1. Memory Lock: Ensures that the JVM is configured to lock memory to prevent swapping, bootstrap.memory_lock: true
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Memory Pages: Modern operating systems manage memory in fixed-size blocks called pages (typically 4 KB in size). When a JVM heap is allocated, it is divided into multiple pages.
-Full Heap Scan: During a major GC, the garbage collector scans and processes the entire heap to identify and collect all the objects that are no longer in use.
-Touching Every Page: When we say the GC "touches every page of the heap," it means that the GC process reads from and possibly writes to each page of memory that has been allocated to the heap.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-2. File Descriptors: Elasticsearch uses a mmapfs directory by default to store its indices. The default operating system limits on mmap counts is likely to be too low, which may result in out of memory exceptions, increase ulimit
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Memory-mapped files allow applications to map files directly into the address space of the process. This means that parts of the file are loaded into memory as needed and can be accessed directly by the application
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-3. virtual memory : Ensures the system is configured with sufficient virtual memory.vm.max_map_count should be at least 262144.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-4. Heap Size: Ensures that the JVM heap size is appropriately configured.
-
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 please explain in details how to improve elasticsearch search queries with an example
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -534,7 +602,8 @@ Configure heap size in jvm.options:
 6. Use Index Lifecycle Management (ILM)
 ILM helps manage indices over their lifecycle, automating actions like rollover and shrink, which can optimize performance.
 
-
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is highlighters
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 In Elasticsearch, highlighters are used to highlight search results by wrapping search terms in a document with specified HTML tags
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -706,19 +775,6 @@ lets say Primary Shards: 5
 No of Replica : 2 , primary shards * 2 replicas = 10 replica shards
 Total Shards: 5 primary shards + 10 replica shards = 15 shards in total
 Replication Factor: 3 (1 primary shard + 2 replicas)
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-Elasticsearch routing 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-Elasticsearch uses the Murmur3 hashing function to calculate the hash value of the routing key (or document ID if no custom routing is provided).
-The hash value is then used with the modulus operation to determine the shard number:
-shard = hash % number_of_primary_shards
-
-Lets say hash value of a document ID 1 is 90fb3fe5 and no of primary shard is 5 , then 
-shard = 90fb3fe5 % 5 = 2
-The value of 90fb3fe5 % 5 is 2. 
-This means that if 90fb3fe5 were used as a hash value for routing in Elasticsearch, the document would be assigned to shard number 2. ​​
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Eplain bulk operation in elasticsearch 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------

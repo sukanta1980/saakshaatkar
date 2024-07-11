@@ -261,15 +261,8 @@ To deploy a multi-region application using Terraform, you should structure your 
 ------------------------------------------------------------------------------------------------------------------
 Can you walk me through a complex Terraform state management scenario you've encountered? How did you handle state locking, state file corruption, or migrating state to a different backend? What were the challenges and solutions?
 ------------------------------------------------------------------------------------------------------------------
-
-Certainly! Managing Terraform state effectively is crucial for the reliability and maintainability of infrastructure as code. Here’s a detailed walkthrough of a complex Terraform state management scenario I encountered, along with the challenges and solutions.
-
-State Locking Issues
 Multiple team members often needed to apply changes simultaneously, leading to state locking conflicts. The default local state locking mechanism wasn’t sufficient to handle concurrent operations effectively.
 We migrated the state to a remote backend that supports state locking and consistency checks. AWS S3 with DynamoDB for state locking was chosen as it provided the necessary features.
-
-Created an S3 bucket to store the Terraform state files.
-Created a DynamoDB table to handle state locking.
 terraform {
   backend "s3" {
     bucket         = "my-terraform-states"
@@ -540,8 +533,6 @@ How does AWS Autoscaling work?
 ------------------------------------------------------------------------------------------------------------------
 What are the components of an AWS Autoscaling group?
 ------------------------------------------------------------------------------------------------------------------
-
-
 - Launch Configuration/Launch Template: Defines the instance configuration (AMI, instance type, key pair, security groups).
 - Autoscaling Group: Manages a group of instances, specifying minimum, maximum, and desired capacity.
 - Scaling Policies: Define how and when to scale the number of instances.
@@ -549,10 +540,7 @@ What are the components of an AWS Autoscaling group?
 ------------------------------------------------------------------------------------------------------------------
 Explain how you would set up horizontal pod autoscaling in Kubernetes.
 ------------------------------------------------------------------------------------------------------------------
-
- Use the Horizontal Pod Autoscaler (HPA) to automatically scale the number of pods in a deployment based on CPU utilization or other custom metrics. Configure HPA using a YAML manifest and apply it with `kubectl`.
-
-Python
+Use the Horizontal Pod Autoscaler (HPA) to automatically scale the number of pods in a deployment based on CPU utilization or other custom metrics. Configure HPA using a YAML manifest and apply it with `kubectl`.
 
 ------------------------------------------------------------------------------------------------------------------
 How do you manage dependencies in a Python project?
