@@ -1,19 +1,86 @@
 ------------------------------------------------------------------------------------------------------------------
+Aws VPC Architecure 
+------------------------------------------------------------------------------------------------------------------
+       +------------------------------ VPC -----------------------------+
+       |                                                                |
+       | +------------+      +-------------+     +-------------+        |
+       | | Subnet A   |      | Subnet B    |     | Subnet C    |        |
+       | | (Public)   |      | (Private) 1 |     | (Private) 2 |        |
+       | |            |      |             |     |             |        |
+       | |            |      |             |     |             |        |
+       | +------------+      +-------------+     +-------------+        |
+       |       |                    |                    |              |
+       |       |                    |                    |              |
+       |  +---------+        +----------+         +----------+          |
+       |  |Internet |        |  NAT     |         |  NAT     |          |
+       |  | Gateway |        | Gateway  |         | Gateway  |          |
+       |  +---------+        +----------+         +----------+          |
+       |        |                    |                    |             |
+       |   Public Route          Private Route      Private Route       |
+       |     Table                  Table 1              Table 2        |
+       |                                                                |
+       +---------------------------------------------------------------+
+VPC (Virtual Private Cloud):A logically isolated section of the AWS cloud where we can launch AWS resources in a virtual network.
+we have full control over our virtual networking environment, including selection of IP address range, creation of subnets, and configuration of route tables and network gateways.
+
+A subnet is a range of IP addresses in our VPC.
+we can create subnets in different AZs for high availability.
+Subnets are categorized as public, private based on the routing configuration.
+
+Route tables contain a set of rules, called routes, that are used to determine where network traffic is directed.
+Each subnet must be associated with a route table, which controls the routing for the subnet.
+Internet Gateway: A horizontally scaled, redundant, and highly available VPC component that allows communication between instances in our VPC and the internet.
+NAT Gateway:A managed service that enables instances in a private subnet to connect to the internet or other AWS services, but prevents the internet from initiating a connection with those instances.
+------------------------------------------------------------------------------------------------------------------
 Explain the TCP three-way handshake process.
 ------------------------------------------------------------------------------------------------------------------
-The client sends a SYN (synchronize) packet to the server to initiate a connection.
-The server responds with a SYN-ACK (synchronize-acknowledge) packet to acknowledge the client's request.
-The client sends an ACK (acknowledge) packet back to the server, confirming the connection is established.
+The TCP three-way handshake is a process used to establish a reliable connection between a client and a server. The process involves three steps: SYN, SYN-ACK, and ACK.
+
+Client                       Server
+  |                             |
+  | -----------SYN---------->   |
+  |  (Seq=100, Ack=0)           |
+  |                             |
+  | <-------SYN-ACK---------    |
+  |  (Seq=200, Ack=101)         |
+  |                             |
+  | -----------ACK---------->   |
+  |  (Seq=101, Ack=201)         |
+  |                             |
+
+SYN (Synchronize)
+   - The client sends a TCP packet with the SYN (synchronize) flag set to the server.
+   - This packet includes an initial sequence number (ISN) which will be used for the communication.
+
+SYN-ACK (Synchronize-Acknowledge)
+   - The server responds with a TCP packet with both the SYN and ACK (acknowledge) flags set.
+   - The server acknowledges the client’s SYN by setting the acknowledgment number to the client’s ISN + 1.
+   - The server also sends its own ISN.
+
+ACK (Acknowledge)
+   - The client sends a TCP packet with the ACK flag set.
+   - The client acknowledges the server’s SYN by setting the acknowledgment number to the server’s ISN + 1.
+   - The connection is now established, and data transmission can begin.
 ------------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
 What are the differences between TCP and UDP?
 ------------------------------------------------------------------------------------------------------------------
-TCP (Transmission Control Protocol) is connection-oriented, reliable, and ensures data is delivered in order. It includes error checking, flow control, and congestion control. UDP (User Datagram Protocol) is connectionless, does not guarantee delivery, and is faster and more efficient for certain applications that do not require reliable delivery (e.g., video streaming, online gaming).
+When we access a website, our browser uses TCP to establish a connection with the web server,Establishes connection before data transfer using a three-way handshake.
+UDP is used to send game state updates quickly. Some packet loss is acceptable to maintain real-time performance.Connectionless protocol. Sends data without establishing a connection
 ------------------------------------------------------------------------------------------------------------------
 
 What is a TCP/IP stack, and what layers does it consist of?
 ------------------------------------------------------------------------------------------------------------------
+|------------------------|
+|   Application Layer    |   e.g., HTTP, FTP, SMTP
+|------------------------|
+|    Transport Layer     |   e.g., TCP, UDP
+|------------------------|
+|     Internet Layer     |   e.g., IP, ICMP, ARP
+|------------------------|
+|  Network Access Layer  |   e.g., Ethernet, Wi-Fi, PPP
+|------------------------|
+
 The TCP/IP stack is a set of networking protocols organized into layers, each responsible for specific functions
 Application Layer : Handles high-level protocols, data representation, and encoding (e.g., HTTP, FTP, SMTP).
 Transport Layer : Manages end-to-end communication and data transfer reliability (e.g., TCP, UDP).

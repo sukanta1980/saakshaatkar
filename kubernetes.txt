@@ -1,4 +1,324 @@
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Describe how would you perform canary deployment in kubernetes 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Canary deployments are a method to gradually roll out new features or updates to a small subset of users before deploying to the entire infrastructure. This approach allows for testing the new version in production with minimal risk. Here’s how to perform a canary deployment in Kubernetes.
+
+Sure! Here's a concise explanation of how to perform a canary deployment in Kubernetes:
+
+### Steps for Performing a Canary Deployment in Kubernetes
+
+1. **Initial Setup:**
+   - Deploy the stable version of your application.
+   - Create a Service to expose the application.
+
+   ```yaml
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: my-app
+   spec:
+     replicas: 10
+     selector:
+       matchLabels:
+         app: my-app
+     template:
+       metadata:
+         labels:
+           app: my-app
+       spec:
+         containers:
+         - name: my-app
+           image: my-app:v1.0
+   ```
+
+   ```yaml
+   apiVersion: v1
+   kind: Service
+   metadata:
+     name: my-app-service
+   spec:
+     selector:
+       app: my-app
+     ports:
+     - protocol: TCP
+       port: 80
+       targetPort: 8080
+   ```
+
+2. **Canary Deployment:**
+   - Create a new deployment for the canary version with fewer replicas.
+
+   ```yaml
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: my-app-canary
+   spec:
+     replicas: 2
+     selector:
+       matchLabels:
+         app: my-app
+         version: canary
+     template:
+       metadata:
+         labels:
+           app: my-app
+           version: canary
+       spec:
+         containers:
+         - name: my-app
+           image: my-app:v2.0
+   ```
+
+3. **Traffic Management:**
+   - Use an ingress controller or service mesh (e.g., Istio) to split traffic between the stable and canary versions.
+
+   **Using Istio VirtualService:**
+
+   ```yaml
+   apiVersion: networking.istio.io/v1alpha3
+   kind: VirtualService
+   metadata:
+     name: my-app
+   spec:
+     hosts:
+     - "my-app.example.com"
+     http:
+     - route:
+       - destination:
+           host: my-app
+           subset: stable
+         weight: 90
+       - destination:
+           host: my-app
+           subset: canary
+         weight: 10
+   ```
+
+   **Istio DestinationRule:**
+
+   ```yaml
+   apiVersion: networking.istio.io/v1alpha3
+   kind: DestinationRule
+   metadata:
+     name: my-app
+   spec:
+     host: my-app
+     subsets:
+     - name: stable
+       labels:
+         version: stable
+     - name: canary
+       labels:
+         version: canary
+   ```
+
+4. **Monitoring:**
+   - Monitor the performance and health of the canary deployment using tools like Prometheus and Grafana.
+
+5. **Gradual Traffic Increase:**
+   - Gradually increase traffic to the canary version if it performs well by adjusting the weights in the ingress or service mesh configuration.
+
+6. **Full Rollout or Rollback:**
+   - If successful, update the stable deployment to the new version and scale up.
+   - If issues arise, scale down or delete the canary deployment to rollback.
+
+   **Full Rollout:**
+
+   ```yaml
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: my-app
+   spec:
+     replicas: 10
+     selector:
+       matchLabels:
+         app: my-app
+     template:
+       metadata:
+         labels:
+           app: my-app
+       spec:
+         containers:
+         - name: my-app
+           image: my-app:v2.0
+   ```
+
+   **Rollback:**
+
+   ```bash
+   kubectl delete deployment my-app-canary
+   ```
+
+By following these steps, you can safely roll out new versions of your application with minimal risk using a canary deployment strategy.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Explain the concept of scheduling process in detail, including how the scheduler selects nodes for running pods  ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The Kubernetes scheduler is responsible for placing pods onto nodes within the cluster
+Kubernetes Scheduling Process
+
+Pod Creation and Admission :
+When a new pod is created, it is sent to the Kubernetes API server.
+The API server stores the pod's information in the etcd datastore and marks the pod as "Pending."
+
+Scheduler Watches for Pending Pods : 
+The scheduler continuously watches for pods in the "Pending" state.
+When it detects a pending pod, the scheduler retrieves the pod specification and begins the scheduling process.
+
+Node Filtering (Predicate Phase): 
+The scheduler filters out nodes that do not meet the pod's requirements and constraints. This phase is also known as the "predicate" phase.
+
+Several checks are performed during this phase:
+Node Unschedulable: Nodes marked as unschedulable are filtered out.
+PodFitsResources: Ensures the node has enough CPU and memory resources.
+PodFitsHostPorts: Checks if the node has available network ports requested by the pod.
+PodFitsHost: Ensures the pod's nodeSelector matches the node's labels.
+PodFitsTaintsAndTolerations: Ensures the pod tolerates any taints on the node.
+PodFitsNodeAffinity: Ensures the pod's node affinity rules are satisfied.
+NoDiskConflict: Checks if the node has sufficient disk space.
+PodFitsVolumeZone: Ensures the pod's volume can be provisioned in the node's zone.
+CheckNodeCondition: Ensures the node is in a healthy state.
+After this phase, a list of "feasible" nodes is produced, where each node meets all the pod's constraints.
+
+Node Scoring (Prioritize Phase) :
+The scheduler assigns scores to each feasible node based on various criteria. This phase is also known as the "prioritize" phase.
+Scoring functions used during this phase include:
+LeastRequestedPriority: Prefers nodes with fewer allocated resources.
+BalancedResourceAllocation: Prefers nodes with balanced resource usage.
+NodePreferAvoidPodsPriority: Prefers nodes that are not heavily utilized.
+InterPodAffinityPriority: Prefers nodes that meet inter-pod affinity/anti-affinity rules.
+NodeAffinityPriority: Prefers nodes that match preferred node affinity rules.
+TaintTolerationPriority: Prefers nodes with tolerable taints.
+Custom Scoring: Custom plugins or functions defined by the cluster administrator.
+Each node is assigned a score between 0 and 100, with higher scores indicating better suitability for the pod.
+
+Node Selection :
+The scheduler selects the node with the highest score. If there are multiple nodes with the same score, one is chosen randomly.
+
+Binding : 
+The scheduler binds the pod to the selected node by updating the pod's status in the API server.
+The pod is then sent to the kubelet running on the selected node, which starts the pod's containers.
+
+ +-------------+
+ |   Pod       |  -- New Pod Created -->
+ +-------------+                      |
+                                      v
+                           +------------------+
+                           |   API Server     |
+                           +------------------+
+                                      |
+                                      v
+                           +------------------+
+                           |  Scheduler       |
+                           +------------------+
+                                      |
+                              Watches for Pending Pods
+                                      v
+                           +------------------+
+                           |  Node Filtering  |
+                           +------------------+
+                                |            |
+              +-----------------+            +-----------------+
+              |                                 |
+    Filters Out Nodes                        Keeps Nodes
+    That Don't Fit                           That Fit
+                                      v
+                           +------------------+
+                           |  Node Scoring    |
+                           +------------------+
+                                |
+                      Scores Nodes Based on Criteria
+                                      v
+                           +------------------+
+                           |  Node Selection  |
+                           +------------------+
+                                |
+                      Selects Node with Highest Score
+                                      v
+                           +------------------+
+                           |   Binding        |
+                           +------------------+
+                                |
+                      Binds Pod to Selected Node
+                                      v
+                           +------------------+
+                           |  Kubelet         |
+                           +------------------+
+                                |
+                      Starts Pod Containers on Node
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Describe how would you configure a multi zone highly available kubernetes cluster
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+                       +-------------------------+
+                       |   Load Balancer (HA)    |
+                       +-------------------------+
+                                  |
+        +-------------------------+-------------------------+
+        |                         |                         |
++-----------------+    +-----------------+    +-----------------+
+|  Control Plane  |    |  Control Plane  |    |  Control Plane  |
+|     Node 1      |    |     Node 2      |    |     Node 3      |
+|    (Zone A)     |    |    (Zone B)     |    |    (Zone C)     |
++-----------------+    +-----------------+    +-----------------+
+        |                         |                         |
+        |                         |                         |
++-----------------+    +-----------------+    +-----------------+
+|  Worker Node 1  |    |  Worker Node 2  |    |  Worker Node 3  |
+|    (Zone A)     |    |    (Zone B)     |    |    (Zone C)     |
++-----------------+    +-----------------+    +-----------------+
+Configuring a multi-zone, highly available Kubernetes cluster involves setting up control plane nodes, worker nodes, networking, storage, and load balancing across multiple availability zones. This ensures fault tolerance, high availability, and scalability for your applications. Using a managed Kubernetes service simplifies many of these steps, as the cloud provider handles the complexity of multi-zone deployments
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is the difference between a DaemonSet and StatefulSet in kubernetes ? When would you use one over other ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Use DaemonSet when:
+You need to run a pod on every node (or specific nodes) in the cluster.
+The application or service is node-specific, such as logging agents, monitoring agents, or network plugins.
+You want to ensure that a particular daemon runs on all nodes for system-wide services.
+
+Use StatefulSet when:
+You need to run stateful applications that require stable and unique network identities.
+The application requires persistent storage that needs to be retained across pod restarts or rescheduling.
+The application requires ordered deployment, scaling, or updates.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Explain the concept of Labels and selectors in kubernetes and provide an example how they are used with a diagram 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                 +-------------+                        +----------------+
+                 |             |   Labels:              |                |
+                 |  Pod 1      |   app: frontend        |  Service       |
+                 |             |   tier: web            |  Selector:     |
+                 |             |   environment: prod    |  app=frontend  |
+                 +-------------+                        |  tier=web      |
+                                                        |  env=prod      |
+                                                        +----------------+
+                 +-------------+                        
+                 |             |   Labels:              
+                 |  Pod 2      |   app: backend
+                 |             |   tier: api
+                 |             |   environment: prod
+                 +-------------+
+
+                 +-------------+                        
+                 |             |   Labels:              
+                 |  Pod 3      |   app: frontend
+                 |             |   tier: web
+                 |             |   environment: dev
+                 +-------------+
+
+In this diagram:
+
+Pod 1 has labels app=frontend, tier=web, and environment=prod.
+Pod 2 has labels app=backend, tier=api, and environment=prod.
+Pod 3 has labels app=frontend, tier=web, and environment=dev.
+The service has a selector matching app=frontend, tier=web, and environment=prod, so it will only route traffic to Pod 1.
+In Kubernetes, labels and selectors are used to organize and manage objects such as pods, services, and deployments
+Labels are key-value pairs that are attached to objects, such as pods
+Selectors are used to filter and query objects based on their labels. There are two types of selectors:
+Equality-based selectors: They allow filtering by key-value pairs, using =, ==, or !=.
+Set-based selectors: They allow filtering by key-value pairs and set operations, such as in, notin, and exists.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Explain kubernetes Nodegroups
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 In Kubernetes, a node group is a collection of nodes (worker machines) that share similar configurations and are managed together
