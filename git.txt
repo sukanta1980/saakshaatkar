@@ -37,6 +37,8 @@ Fetch the latest changes from the remote repository: git fetch origin master
 Merge the fetched changes into your current branch : git merge FETCH_HEAD
 Resolve the conflicts manually : Open the conflicting files in a text editor, Look for conflict markers (<<<<<<, ======, >>>>>>).
 Stage the resolved files : git stage helm-charts/atropos-operator/Chart.yaml or git add path/to/conflicted/file
+Once we have resolved the conflicts in our editor and saved the changes, we need to mark these files as "staged" so that Git knows they are ready to be included in the next commit.
+Staging a file in Git means adding it to the staging area (also called the index), which is an intermediate area where we can prepare files for the next commit.
 Commit the resolved changes : git commit -m "OSRE-299:Added code to create roles for audit center"
 Push the resolved changes to the remote repository : git push
 Check the status to ensure everything is clean : git status
@@ -65,7 +67,7 @@ git rebase main
 How do you revert a commit in Git?
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-git revert <commit_hash>
+git revert <commit_id>
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 How do you delete a branch in Git?
