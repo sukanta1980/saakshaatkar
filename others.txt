@@ -1,16 +1,76 @@
-What is observility
-How to measure performance on application
+
 What are the metrices for kafka
 How to measure kafka lag
 How to do memory management in your code
 write a sudo code to traverse a path and find all the files and directory, donot use ls command
 write a sudo code to reverse a String
-In you existing ELK system how to add a new parameter
 In grafana or kibana how to add rules
 Give an example of SLO and SLI
 How to measure high availibility on your system
 What is the meaning of reliability and how to measure it , what are the metrics
+
 ------------------------------------------------------------------------------------------------------------------
+In you existing ELK system how to add a new parameter
+------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------------------------------
+How to measure performance on application
+------------------------------------------------------------------------------------------------------------------
+
+### 1. **Define Performance Metrics**
+
+Identify what performance means for your application. Common metrics include:
+- **Response Time:** How quickly the application responds to user interactions.
+- **Throughput:** The number of transactions or operations the application can handle per unit of time.
+- **Resource Utilization:** How efficiently the application uses CPU, memory, and disk resources.
+- **Scalability:** How well the application handles increased loads or user traffic.
+- **Error Rate:** The frequency of errors or failures occurring in the application.
+
+### 2. **Set Up Monitoring Tools**
+
+Use monitoring tools to gather data on your application's performance. Some popular tools include:
+- **Application Performance Monitoring (APM) Tools:** Such as New Relic, AppDynamics, or Dynatrace.
+- **Server Monitoring Tools:** Like Nagios, Zabbix, or Prometheus.
+- **Log Analysis Tools:** ELK Stack (Elasticsearch, Logstash, Kibana), Splunk, or Graylog.
+- **Network Monitoring Tools:** Tools like Wireshark or SolarWinds can help with network-related performance issues.
+
+### 3. **Conduct Performance Testing**
+
+Performance testing helps you identify and resolve performance bottlenecks before the application goes live. Key types include:
+- **Load Testing:** Assess how the application performs under expected and peak load conditions.
+- **Stress Testing:** Determine how the application behaves under extreme conditions or beyond its capacity.
+- **Soak Testing:** Evaluate how the application performs over an extended period under a constant load.
+- **Spike Testing:** Test the application’s response to sudden and extreme increases in load.
+- **Scalability Testing:** Examine how well the application scales with increased user load or data volume.
+
+### 4. **Measure User Experience**
+
+User experience is critical for application performance. Tools and methods include:
+- **Real User Monitoring (RUM):** Tracks actual user interactions with the application, providing insights into real-world performance.
+- **Synthetic Monitoring:** Uses scripted tests to simulate user interactions and monitor performance from various locations.
+- **User Feedback:** Collect direct feedback from users about their experience and performance issues they encounter.
+
+### 5. **Analyze and Interpret Data**
+
+Once you have collected data, analyze it to identify trends, bottlenecks, or areas for improvement. Look for:
+- **Patterns and Anomalies:** Identify patterns in performance data and investigate anomalies or outliers.
+- **Performance Bottlenecks:** Determine where performance is lagging and the possible causes.
+- **Resource Usage:** Check if resource usage is efficient and whether scaling is needed.
+
+### 6. **Optimize and Improve**
+
+Based on your analysis, take steps to optimize performance:
+- **Code Optimization:** Refactor or optimize code to improve efficiency.
+- **Database Optimization:** Index databases, optimize queries, or improve data storage solutions.
+- **Infrastructure Scaling:** Adjust server capacity, add more resources, or use cloud scaling features.
+- **Caching:** Implement or enhance caching strategies to reduce load times and improve performance.
+
+### 7. **Continuous Monitoring and Improvement**
+
+Performance measurement is an ongoing process. Continuously monitor the application, gather performance data, and make iterative improvements based on the data collected.
+------------------------------------------------------------------------------------------------------------------
+
 Please explain What is observility, explain with an example and a diagram
 ------------------------------------------------------------------------------------------------------------------
 Observability is the practice of instrumenting a system so that its internal state can be understood by examining its external outputs. It is a crucial concept in modern software engineering, especially in complex, distributed systems where understanding system behavior and performance is essential for maintaining reliability and performance.
