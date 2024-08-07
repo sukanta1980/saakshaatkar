@@ -2,6 +2,28 @@
 What are the metrices for kafka
 How to measure kafka lag
 ------------------------------------------------------------------------------------------------------------------
+Explain site reliability with an example and a diagram
+------------------------------------------------------------------------------------------------------------------
+Site Reliability Engineering (SRE) is a discipline that incorporates aspects of software engineering and applies them to infrastructure and operations problems. The main goals are to create scalable and highly reliable software systems. SRE was pioneered by Google and is now widely adopted across the industry.
+
+Reliability: Ensuring a system's availability and performance to meet user expectations.
+Scalability: Designing systems that can handle increased load without compromising performance.
+Performance: Optimizing system operations to ensure fast and efficient responses.
+Monitoring and Observability: Continuously monitoring system health and understanding its behavior through metrics, logs, and traces.
+Incident Management: Efficiently handling incidents to minimize downtime and impact.
+Automation: Reducing manual intervention through scripts and tools to handle repetitive tasks.
+SLI, SLO, SLA:
+SLI (Service Level Indicator): A quantitative measure of a particular aspect of service performance.
+SLO (Service Level Objective): The target value or range for an SLI.
+SLA (Service Level Agreement): A formal agreement between a service provider and a customer on the expected service performance.
+
+Consider an e-commerce website like Amazon. The primary goals for the SRE team would be to ensure that:
+The website is always available (high uptime).
+The pages load quickly (performance).
+The site can handle spikes in traffic, such as during sales events (scalability).
+Errors are detected and resolved quickly (incident management).
+New features are deployed without causing downtime (reliability during deployments).
+------------------------------------------------------------------------------------------------------------------
 How to do memory management in your code
 ------------------------------------------------------------------------------------------------------------------
 1. Understand Memory Allocation and Deallocation : In languages like Java, Python, and JavaScript, garbage collectors automatically manage memory, but understanding how they work can help you write more efficient code.
@@ -18,17 +40,19 @@ How to do memory management in your code
 ------------------------------------------------------------------------------------------------------------------
 write a sudo code to reverse a String
 ------------------------------------------------------------------------------------------------------------------
-SET original_string TO "Hello, World!"
-SET reversed_string TO ""
-SET length TO LENGTH of original_string
+#!/bin/bash
 
-FOR i FROM length - 1 TO 0
-    SET character TO original_string[i]
-    APPEND character TO reversed_string
-END FOR
-
-PRINT "Original String: " + original_string
-PRINT "Reversed String: " + reversed_string
+original_string="Kolkata"
+reversed_string=""
+length=${#original_string}
+for (( i=$length-1; i>=0; i-- ))
+do
+    character=${original_string:$i:1}#substring
+    echo "character => $i => $character";
+    reversed_string="$reversed_string$character"
+done
+echo "Original String: $original_string"
+echo "Reversed String: $reversed_string"
 
 ------------------------------------------------------------------------------------------------------------------
 In grafana or kibana how to add rules
@@ -46,30 +70,24 @@ Availability = (Uptime/Downtime+Uptime)×100
 - Logs and Metrics : Collect logs and metrics related to system performance, errors, and downtime events.
 - Incident Tracking : Use incident tracking tools like PagerDuty or Opsgenie to log and analyze downtime events.
 - Root Cause Analysis (RCA): Perform RCA for each downtime incident to understand the cause and mitigate future occurrences.
-
 ------------------------------------------------------------------------------------------------------------------
 What is the meaning of reliability and how to measure it , what are the metrics
-
-Reliability in the context of IT systems and software refers to the ability of a system or component to consistently perform its required functions under stated conditions for a specified period of time. Reliable systems minimize downtime and provide consistent, predictable performance. 
-Reliability can be measured using various metrics, often under the umbrella of **Service Level Indicators (SLIs)**, **Service Level Objectives (SLOs)**, and **Service Level Agreements (SLAs)**. Here are some key metrics:
+------------------------------------------------------------------------------------------------------------------
+Reliability refers to the ability of a system to perform its intended function consistently and accurately over a specified period of time, under given conditions. In the context of software systems, reliability is about ensuring that the system is available, performs well, and can recover from failures.
 
 1. Mean Time Between Failures (MTBF)**:
 2. Mean Time to Repair (MTTR)**:
 3. Availability : The proportion of time a system is operational and accessible when required for use.
 4. Failure Rate : The frequency at which a system or component fails.
 5. Uptime/Downtime : The time period when the system is not operational due to failures or maintenance.
+6. SLO,SLI,SLA
 ------------------------------------------------------------------------------------------------------------------
 In you existing ELK system how to add a new parameter
 ------------------------------------------------------------------------------------------------------------------
 To add a new parameter to your existing ELK (Elasticsearch, Logstash, Kibana) system, you typically need to update the configuration for the data ingestion process. Here are the general steps:
 
-Identify the Source of the Data:
-
-Determine where the data is coming from (e.g., logs from a server, application data, etc.).
+Identify the Source of the Data:Determine where the data is coming from (e.g., logs from a server, application data, etc.).
 Update Logstash Configuration:
-
-Update Elasticsearch Mapping (if necessary):
-Restart Logstash:
 input {
   file {
     path => "/var/log/myapp.log"
@@ -90,6 +108,8 @@ output {
     index => "myapp-logs-%{+YYYY.MM.dd}"
   }
 }
+Update Elasticsearch Mapping (if necessary):
+Restart Logstash:
 ------------------------------------------------------------------------------------------------------------------
 How to measure performance on application
 ------------------------------------------------------------------------------------------------------------------
@@ -164,7 +184,7 @@ SLI (Service Level Indicator): A measurable value that indicates the performance
 SLO (Service Level Objective): A target value or range for an SLI (e.g., 99.9% uptime).
 SLA (Service Level Agreement): A formal agreement between a service provider and a customer that defines the expected performance and reliability of a service, often including penalties for not meeting SLOs.
 ------------------------------------------------------------------------------------------------------------------
-What is the Key metrics we should consider for SLI for an we based application 
+What is the Key metrics we should consider for SLI for an web based application 
 ------------------------------------------------------------------------------------------------------------------
 Service Level Indicators (SLIs) are specific metrics used to measure the performance, availability, and reliability of a web-based application. Here are key metrics to consider:
 
