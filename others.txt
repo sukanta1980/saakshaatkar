@@ -222,16 +222,6 @@ Memory Usage: The amount of memory used by the application.
 Formula: Used Memory / Total Available Memory
 Disk I/O: The rate of disk input/output operations.
 
-Security Metrics
-Number of Security Incidents: The number of reported security incidents over a period.
-
-Database Metrics
-Query Performance: Average time taken to execute database queries.
-Formula: Total Query Time / Number of Queries
-Connection Pool Usage: The number of database connections used.
-Cache Hit Ratio: The percentage of database queries served from cache.
-Formula: (Cache Hits / Total Queries) * 100
-
 Here’s a practical example of SLIs you might define for a web-based application:
 
 Uptime: 99.95%
